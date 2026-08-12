@@ -12,9 +12,21 @@ in its own remote.
 |---|---|---|
 | [fabric-godot-core](https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core) | [`gyre`](https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core/tree/gyre) | The engine fork. `gyre` is the ref everything downstream pins. |
 | [godot-images](https://github.com/v-sekai-multiplayer-fabric/godot-images) | `main` | Builds the engine — editor and `template_release` — and publishes to GHCR. Pinned to `fabric-godot-core` @ `gyre`. |
+| [fabric-godot-assembly](https://github.com/v-sekai-multiplayer-fabric/fabric-godot-assembly) | `main` | `gitassembly` — merges the upstream Godot branches that make up the engine fork. |
 | [fabric-store-domain](https://github.com/v-sekai-multiplayer-fabric/fabric-store-domain) | `main` | The store domain. |
 | [foundationdb](https://github.com/v-sekai-multiplayer-fabric/foundationdb) | `main` | The pages, and every durable transaction the store domain commits. Below the planes, not one of them. |
 | [multiplayer-fabric-manuals](https://github.com/v-sekai-multiplayer-fabric/multiplayer-fabric-manuals) | `main` | Architecture decisions, changelogs, and reference docs for the stack. |
+
+### Edges
+
+Every edge terminates client transport, which is what makes it an edge rather
+than a plane. All on `main`: `fabric-gateway-edge` (control streams),
+`fabric-ingest-edge` (player input datagrams), `fabric-fanout-edge`
+(interest-filtered entity packets out), `fabric-asset-edge` (a casync chunk CDN,
+and the one that needs no ring).
+
+`fabric-gateway-edge` is also a `git subtree` inside `fabric-store-domain`. It is
+a project here as well, so the upstream is on hand to subtree-pull from.
 
 ### Lean hexagons
 
