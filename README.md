@@ -2,9 +2,7 @@
 
 A [meta](https://github.com/mateodelnorte/meta) repo that groups the gyre
 dependencies, so one command checks them all out and one command runs git
-across all of them. Nothing is vendored and nothing is a submodule — this
-repo holds only the `.meta` manifest, and each child keeps its own history
-in its own remote.
+across all of them.
 
 ## Setup
 
