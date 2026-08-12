@@ -6,60 +6,6 @@ across all of them. Nothing is vendored and nothing is a submodule — this
 repo holds only the `.meta` manifest, and each child keeps its own history
 in its own remote.
 
-## Projects
-
-| Project | Branch to work on | Purpose |
-|---|---|---|
-| [fabric-godot-core](https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core) | [`gyre`](https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core/tree/gyre) | The engine fork. `gyre` is the ref everything downstream pins. |
-| [godot-images](https://github.com/v-sekai-multiplayer-fabric/godot-images) | `main` | Builds the engine — editor and `template_release` — and publishes to GHCR. Pinned to `fabric-godot-core` @ `gyre`. |
-| [fabric-godot-assembly](https://github.com/v-sekai-multiplayer-fabric/fabric-godot-assembly) | `main` | `gitassembly` — merges the upstream Godot branches that make up the engine fork. |
-| [vsekai-godot-mcp](https://github.com/v-sekai-multiplayer-fabric/vsekai-godot-mcp) | `main` | In-editor MCP server addon for Godot. |
-| [blender-mcp](https://github.com/v-sekai-multiplayer-fabric/blender-mcp) | `main` | MCP server addon for Blender, the authoring end of the same pipe. |
-| [fabric-store-domain](https://github.com/v-sekai-multiplayer-fabric/fabric-store-domain) | `main` | The store domain. |
-| [foundationdb](https://github.com/v-sekai-multiplayer-fabric/foundationdb) | `main` | The pages, and every durable transaction the store domain commits. Below the planes, not one of them. |
-| [multiplayer-fabric-manuals](https://github.com/v-sekai-multiplayer-fabric/multiplayer-fabric-manuals) | `main` | Architecture decisions, changelogs, and reference docs for the stack. |
-
-### Edges
-
-Every edge terminates client transport, which is what makes it an edge rather
-than a plane. All on `main`: `fabric-gateway-edge` (control streams),
-`fabric-ingest-edge` (player input datagrams), `fabric-fanout-edge`
-(interest-filtered entity packets out), `fabric-asset-edge` (a casync chunk CDN,
-and the one that needs no ring).
-
-`fabric-gateway-edge` is also a `git subtree` inside `fabric-store-domain`. It is
-a project here as well, so the upstream is on hand to subtree-pull from.
-
-### Lean hexagons
-
-Every `lean-*` project is a standalone Lean 4 workspace on `main`, one hexagon
-each: `lean-shared-core` (the dependency-free vocabulary the rest build on),
-`lean-combat-core`, `lean-connection-fsm`, `lean-duckdb`, `lean-entity-packet`,
-`lean-fabric-protocol`, `lean-http3-queue`, `lean-humanoid-rom`,
-`lean-interest-mgmt`, `lean-loot-core`, `lean-progression-core`,
-`lean-rebac-core`, `lean-spatial-oracle`.
-
-### taskweft
-
-[`taskweft`](https://github.com/taskweft/taskweft) on `main` — the HTN planner.
-It has its own org, `taskweft`. `fabric-store-domain` also carries a
-`thirdparty/taskweft` copy, taken from `v-sekai-multiplayer-fabric/nif`'s
-`standalone/` and not linked by a subtree, so the two can drift.
-
-### flowref
-
-[`flowref`](https://github.com/fire/flowref) and
-[`flowref-decompiler`](https://github.com/fire/flowref-decompiler), both `main`:
-the control-flow-aware xref finder in Lean 4, and the decompiler over it. These
-two live under `fire`, not `v-sekai-multiplayer-fabric`.
-
-`fabric-store-domain` carries `fabric-interactor`, `fabric-gateway-edge`, and
-`fabric-store-plane` as `git subtree` squashes under `thirdparty/`, so they are
-pulled with `git subtree pull` from inside that repo and are not projects here.
-
-`fabric-godot-core`'s default branch is `master`, so a fresh clone lands
-there and has to be moved to `gyre` — the checkout step below does that.
-
 ## Setup
 
 Requires Node.js.
