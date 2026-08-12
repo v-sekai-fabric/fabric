@@ -3,6 +3,8 @@
     "fabric-godot-core": "https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core.git",
     "godot-images": "https://github.com/v-sekai-multiplayer-fabric/godot-images.git",
     "fabric-godot-assembly": "https://github.com/v-sekai-multiplayer-fabric/fabric-godot-assembly.git",
+    "vsekai-godot-mcp": "https://github.com/v-sekai-multiplayer-fabric/vsekai-godot-mcp.git",
+    "blender-mcp": "https://github.com/v-sekai-multiplayer-fabric/blender-mcp.git",
     "fabric-store-domain": "https://github.com/v-sekai-multiplayer-fabric/fabric-store-domain.git",
     "foundationdb": "https://github.com/v-sekai-multiplayer-fabric/foundationdb.git",
     "multiplayer-fabric-manuals": "https://github.com/v-sekai-multiplayer-fabric/multiplayer-fabric-manuals.git",
@@ -23,6 +25,7 @@
     "lean-progression-core": "https://github.com/v-sekai-multiplayer-fabric/lean-progression-core.git",
     "lean-rebac-core": "https://github.com/v-sekai-multiplayer-fabric/lean-rebac-core.git",
     "lean-spatial-oracle": "https://github.com/v-sekai-multiplayer-fabric/lean-spatial-oracle.git",
+    "taskweft": "https://github.com/taskweft/taskweft.git",
     "flowref": "https://github.com/fire/flowref.git",
     "flowref-decompiler": "https://github.com/fire/flowref-decompiler.git"
   }
