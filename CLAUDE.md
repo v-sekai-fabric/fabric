@@ -194,6 +194,41 @@ optimistic, most likely, pessimistic. The spread is the useful part. A task esti
 to shrink the pessimistic case first — usually by running the smallest thing that would tell you
 which end of the range is real.
 
+### Take the three points from git, not from a feeling
+
+Guessed estimates are the same failure as a made-up score, one step further in. Derive them from
+what this org has actually done: group each repository's commits into sessions, where a gap of
+more than four hours means somebody went away rather than worked slowly, and take percentiles of
+session length by size.
+
+    git -C <repo> log --since=6.months --pretty=%ct --numstat
+
+**Measured across every checkout here, 475 sessions over six months:**
+
+| session size | n | o (p10) | m (p50) | p (p90) | te |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2–4 commits | 220 | 0.02 h | 1.05 h | 3.91 h | **1.35 h** |
+| 5–9 commits | 66 | 1.14 h | 3.86 h | 8.61 h | **4.20 h** |
+| 10–24 commits | 102 | 1.95 h | 8.14 h | 16.31 h | **8.47 h** |
+| 25+ commits | 87 | 8.90 h | 14.68 h | 21.10 h | **14.79 h** |
+
+Size a task by the commits it will take — which is a guess about *shape*, and a far easier one
+than a guess about hours — and read the row.
+
+Re-derive the table rather than trusting these numbers forever; they are this org, this year,
+this way of working.
+
+**Check that the evidence measures the thing.** Merged-PR cycle time was tried first and is
+useless here: across 387 merged pull requests the median is **under six minutes**, because a
+pull request is opened and merged by the same person in one motion. That measures how long a
+review sits, and in a solo workflow the answer is zero. Commit cadence measures work; PR age
+measures process. Picking the wrong one produces confident numbers about nothing.
+
+**Expect the correction to be large and in one direction.** Estimates made by feel on this
+workspace ran two to four times optimistic against the table — a "half hour" probe sits in the
+2–4 commit row at `te` 1.35 h with a p90 near four hours. Optimism is the normal direction, so a
+sanity check that only ever confirms the guess is not being run properly.
+
 **Then find the critical path.** The longest chain of dependent tasks is the earliest the whole
 thing can finish. Only two facts matter after that:
 
