@@ -30,6 +30,7 @@
     "lean-spatial-oracle": "--branch main https://github.com/v-sekai-multiplayer-fabric/lean-spatial-oracle.git",
     "taskweft": "--branch main https://github.com/taskweft/taskweft.git",
     "flowref": "--branch main https://github.com/fire/flowref.git",
-    "flowref-decompiler": "--branch main https://github.com/fire/flowref-decompiler.git"
+    "flowref-decompiler": "--branch main https://github.com/fire/flowref-decompiler.git",
+    "fabric-wt-harness": "--branch main https://github.com/v-sekai-multiplayer-fabric/fabric-wt-harness.git"
   }
 }
