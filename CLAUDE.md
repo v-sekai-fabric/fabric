@@ -5,6 +5,23 @@ the directories under it, so these hold in each repository `.meta` names without
 into any of them. A repository's own `CLAUDE.md` says what that repository is; this says how
 work is done across all of them.
 
+## The manifest
+
+- `.meta` MUST state every value it depends on, including the ones that are obvious and the
+  ones a tool would default for you. Today that is the branch: `--branch main <url>`, never a
+  bare `<url>`.
+
+A value left out is not absent, it is decided somewhere else. An entry with no branch clones
+whatever the remote's HEAD happens to be, which the manifest does not record and the remote can
+change on its own, so two checkouts made a month apart can differ with nothing here to compare.
+
+Writing the obvious ones is the whole point. If only the unusual entries carry a branch, a
+missing one means "the default, probably" and a present one means "look closer", and neither is
+checkable. Two of the twenty-eight are already not what a reader would guess —
+`fabric-godot-core` tracks `gyre` while its own default is `master`, and `lean-http3-queue`
+defaults to `master` unlike every other `lean-*`. Stating all of them makes those two ordinary
+lines rather than discoveries, and makes the next one visible in a diff.
+
 ## Commits
 
 - Commit style: sentence case. Do not use a `type(scope):` prefix.
