@@ -1,17 +1,34 @@
-# Child repos, cloned in place by `meta git clone`. Each keeps its own
-# history in its own remote; this repo tracks only the .meta manifest.
-/fabric-godot-core/
-/godot-images/
-/fabric-store-domain/
-/fabric-godot-assembly/
-/vsekai-godot-mcp/
+# Child repos, cloned in place by `meta git clone`. Each keeps its own history in its own
+# remote; this repo tracks only the `.meta` manifest and the conventions beside it.
+#
+# Every entry in `.meta` must be matched here, or its clone appears as untracked and the next
+# person to run `git status` is invited to commit somebody else's repository into this one.
+# Checked with:
+#
+#   python -c "import json,subprocess; [print('MISSING',n) for n in json.load(open('.meta'))['projects'] if subprocess.run(['git','check-ignore','-q',n]).returncode]"
 /blender-mcp/
 /fabric-*-edge/
-/foundationdb/
-/multiplayer-fabric-manuals/
-/lean-*/
-/taskweft/
-/flowref/
+/fabric-godot-assembly/
+/fabric-godot-core/
+/fabric-godot-service/
+/fabric-physics-interactor/
+/fabric-physics-service/
+/fabric-store-domain/
+/fabric-wt-harness/
 /flowref-decompiler/
+/flowref/
+/foundationdb/
+/godot-images/
+/lean-*/
+/multiplayer-fabric-manuals/
+/taskweft/
+/vsekai-godot-mcp/
 
+# Build and run output from work done at the workspace root rather than inside a child. Logs
+# from a long engine build or a test server land here and are worth keeping on disk while a
+# session runs, and worth keeping out of a manifest repository afterwards.
+*.log
+
+# Scratch that is neither a child repo nor a build artefact.
 node_modules/
+/wallpaper-parsec/
