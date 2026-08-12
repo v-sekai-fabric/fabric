@@ -1,0 +1,7 @@
+# Child repos, cloned in place by `meta git clone`. Each keeps its own
+# history in its own remote; this repo tracks only the .meta manifest.
+/fabric-godot-core/
+/godot-images/
+/fabric-store-domain/
+
+node_modules/

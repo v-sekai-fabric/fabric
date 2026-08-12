@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "fabric-godot-core": "https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core.git",
+    "godot-images": "https://github.com/v-sekai-multiplayer-fabric/godot-images.git",
+    "fabric-store-domain": "https://github.com/v-sekai-multiplayer-fabric/fabric-store-domain.git"
+  }
+}
