@@ -2,6 +2,23 @@
   "projects": {
     "fabric-godot-core": "https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core.git",
     "godot-images": "https://github.com/v-sekai-multiplayer-fabric/godot-images.git",
-    "fabric-store-domain": "https://github.com/v-sekai-multiplayer-fabric/fabric-store-domain.git"
+    "fabric-store-domain": "https://github.com/v-sekai-multiplayer-fabric/fabric-store-domain.git",
+    "foundationdb": "https://github.com/v-sekai-multiplayer-fabric/foundationdb.git",
+    "multiplayer-fabric-manuals": "https://github.com/v-sekai-multiplayer-fabric/multiplayer-fabric-manuals.git",
+    "lean-shared-core": "https://github.com/v-sekai-multiplayer-fabric/lean-shared-core.git",
+    "lean-combat-core": "https://github.com/v-sekai-multiplayer-fabric/lean-combat-core.git",
+    "lean-connection-fsm": "https://github.com/v-sekai-multiplayer-fabric/lean-connection-fsm.git",
+    "lean-duckdb": "https://github.com/v-sekai-multiplayer-fabric/lean-duckdb.git",
+    "lean-entity-packet": "https://github.com/v-sekai-multiplayer-fabric/lean-entity-packet.git",
+    "lean-fabric-protocol": "https://github.com/v-sekai-multiplayer-fabric/lean-fabric-protocol.git",
+    "lean-http3-queue": "https://github.com/v-sekai-multiplayer-fabric/lean-http3-queue.git",
+    "lean-humanoid-rom": "https://github.com/v-sekai-multiplayer-fabric/lean-humanoid-rom.git",
+    "lean-interest-mgmt": "https://github.com/v-sekai-multiplayer-fabric/lean-interest-mgmt.git",
+    "lean-loot-core": "https://github.com/v-sekai-multiplayer-fabric/lean-loot-core.git",
+    "lean-progression-core": "https://github.com/v-sekai-multiplayer-fabric/lean-progression-core.git",
+    "lean-rebac-core": "https://github.com/v-sekai-multiplayer-fabric/lean-rebac-core.git",
+    "lean-spatial-oracle": "https://github.com/v-sekai-multiplayer-fabric/lean-spatial-oracle.git",
+    "flowref": "https://github.com/fire/flowref.git",
+    "flowref-decompiler": "https://github.com/fire/flowref-decompiler.git"
   }
 }

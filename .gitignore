@@ -3,5 +3,10 @@
 /fabric-godot-core/
 /godot-images/
 /fabric-store-domain/
+/foundationdb/
+/multiplayer-fabric-manuals/
+/lean-*/
+/flowref/
+/flowref-decompiler/
 
 node_modules/
