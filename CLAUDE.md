@@ -18,6 +18,27 @@ A branch split the way the work happened reads as a diary and reviews as one. Th
 tell which commit is the idea and which is the repair, and bisect lands on commits that never
 worked.
 
+## Pull requests
+
+- Open a pull request as a **draft** while anything about it is still in flight: a commit not
+  pushed, a check not run, a number not yet checked.
+- Mark it **ready for review** only when the branch is complete and its checks are green. Ready
+  means ready to merge, and nothing else says so.
+- A draft cannot be merged by accident, which is the whole point. Ready is a claim, so do not
+  make it early and then keep pushing.
+
+The state is the signal because nothing else is. A branch that looks finished and a branch that
+is finished are the same branch to a reader, and a pull request whose commits are still arriving
+will be merged without them — the merge takes what is there at that moment, not what the author
+meant to include. Two commits in this workspace have already been lost that way: a proof merged
+without the theorem it was written for, and a rewrite merged before it was rewritten. Neither
+review could have caught it, because in both cases what was on screen was correct and what was
+missing had not been pushed yet.
+
+After a merge, check that the commits reached the target branch rather than that they were
+pushed. `git log origin/main..<branch>` should be empty. `gh pr view --json commits` says what
+the merge actually took, and it is the number to trust.
+
 ## Comments
 
 - Match the comment density of FoundationDB, which is 12 to 14 percent of non-blank lines in
