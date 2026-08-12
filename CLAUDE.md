@@ -106,6 +106,37 @@ builds somewhere other than where it was written. `fabric-godot-core`'s `runner.
 any push to any branch, so that is available the moment it is wanted — after the local run, not
 instead of it.
 
+### Driving Godot locally
+
+`vsekai-godot-mcp` is the local harness for anything Godot, and it is available here rather
+than being something to build each time. Vendor it into a project as
+`addons/vsekai_godot_mcp` from the repository's `addon-root` branch — Godot only scans
+`res://addons/*/plugin.cfg`, so the whole repository subtreed puts it one level too deep and
+the editor never finds it.
+
+Both halves run at once, on purpose:
+
+- the **editor plugin** on `127.0.0.1:8788` — the scene as edited, `play_main`, `stop`
+- **`MCPRuntime`**, autoloaded into the running game, on `8789` — the scene as it actually is
+
+Two ports because pressing play in an open editor is the ordinary case. When they shared 8788
+the game lost the bind, printed `listen failed`, and a client went on questioning the editor
+while believing it had reached the game — wrong answers rather than an error. `--mcp-port=` or
+`GODOT_MCP_PORT` moves the runtime one.
+
+**Ask the running game, not the editor, when the question is what arrived.** A node's real
+transform is the difference between "the packet decoded" and "the object is where the service
+put it", and nothing above the socket can tell you the second. The editor answers what the
+scene was authored as, which is a different question and often the wrong one.
+
+`claude mcp add --scope project --transport http godot http://127.0.0.1:8788/mcp` registers it,
+and `.mcp.json` here already carries that entry.
+
+Two things it will not do. `screenshot` captures the **editor viewport**, not the running game's
+window, so it is evidence about the editor and nothing else. And driving the runtime bridge hard
+has killed it mid-session — the editor's survived, the game's stopped answering — so a bridge
+that goes quiet is a restart rather than a finding about the code under test.
+
 ## Comments
 
 - Match the comment density of FoundationDB, which is 12 to 14 percent of non-blank lines in
