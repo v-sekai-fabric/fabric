@@ -178,6 +178,43 @@ outstanding. And a pull request was opened describing a test harness whose file 
 pushed — the description was accurate about the work and wrong about the repository, which is
 the failure a reviewer cannot catch.
 
+## Ordering work: PERT and the critical path
+
+Taking inventory says what is open. To decide what to do next, draw the dependency graph and
+estimate each task three ways. Do NOT invent a value score and rank by it — a made-up number
+divided by another made-up number produces arithmetic that looks objective and only launders
+whatever order was already preferred.
+
+**Estimate each task three ways**, because a single number hides how little is known:
+
+    te = (o + 4m + p) / 6
+
+optimistic, most likely, pessimistic. The spread is the useful part. A task estimated
+`1h / 2h / 12h` is not a two-hour task, it is an unknown wearing one, and the honest response is
+to shrink the pessimistic case first — usually by running the smallest thing that would tell you
+which end of the range is real.
+
+**Then find the critical path.** The longest chain of dependent tasks is the earliest the whole
+thing can finish. Only two facts matter after that:
+
+- Work **on** the path: every hour saved is an hour off the finish.
+- Work **off** it has slack: it can be done late, in parallel, or by somebody else, and finishing
+  it early buys nothing at all.
+
+That is the whole ranking, and it comes from the graph rather than from a preference. A task can
+be genuinely important and have slack — say so and let it wait, rather than promoting it because
+it feels urgent.
+
+**Dependencies must be checked, not assumed.** The cheapest thing an inventory does is delete an
+edge. Comparing physics topologies against a counting sink turned out to need no transport at
+all, so an entire transport lane left the critical path — visible only by reading what the
+benchmark actually calls, not by thinking about what a networking comparison ought to need.
+
+**Where the graph forks on an unknown, the probe that resolves it is on the critical path.** If
+one branch of the plan depends on a property nothing has measured — determinism, a rate, a
+limit — the measurement precedes both branches, because until it lands every downstream estimate
+has a pessimistic case that includes "and then throw it away".
+
 ## Comments
 
 - Match the comment density of FoundationDB, which is 12 to 14 percent of non-blank lines in
