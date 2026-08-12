@@ -56,6 +56,56 @@ After a merge, check that the commits reached the target branch rather than that
 pushed. `git log origin/main..<branch>` should be empty. `gh pr view --json commits` says what
 the merge actually took, and it is the number to trust.
 
+## Citation
+
+- Every repository MUST carry a `CITATION.cff`, and its `references:` MUST name what the
+  repository is built on: the designs it implements, the code it clones or vendors, and the
+  repositories its constants are read from.
+- Add the reference in the same commit that adds the dependency. A `CITATION.cff` written once
+  and never touched again is a worse claim than none, because it reads as current.
+
+Fourteen repositories here already have one and the rest do not, which makes the file look like a
+habit of the `lean-*` hexagons rather than a rule. It is a rule, and the reason is what the
+manifest's reason is: a value left out is not absent, it is recorded somewhere else. Provenance
+stated only in prose is stated once, in whichever paragraph happened to need it, and a reader
+asking "what is this made of" has to read the whole `README.md` and trust that nothing was
+dropped. `fabric-physics-service` is the case that makes it plain — a clone of one repository,
+vendoring a second and a third, implementing somebody else's published design, against numbers
+proved in four Lean hexagons. None of that is visible in a dependency file, because there is no
+dependency file that could hold a journal article.
+
+## Where a thing is built and run
+
+- Build and test **locally** by default. Reach for CI when the work overflows what this machine
+  has — cores, wall clock, memory, disk, or the platforms it is not — and then let the cloud
+  scale it out.
+- Do NOT push a branch so that CI will compile it for you when the machine in front of you can.
+  CI is the overflow, not the first attempt.
+- Cap a long compile so the machine stays usable. `-j4` for a Godot build here, not `-j16`: the
+  desk is also what the headset is plugged into and what a test client runs on.
+
+Local is cheaper for a reason that has nothing to do with who pays for the runner. A local build
+is **incremental** and a CI build is always cold. The Godot editor build in `fabric-godot-core`
+is the case that shows it: an interrupted run left 2389 objects and a 19 MB `.sconsign5.dblite`,
+so resuming cost minutes where CI would have started from nothing on every push. The second run
+of anything is where local wins, and there is always a second run.
+
+The feedback loop is the other half. A failure on this machine is a file and a line, now, with
+the tree still in the state that produced it. The same failure in CI is a log to download, a
+tree you cannot poke at, and a queue between every attempt — so a two-line fix costs a
+round-trip instead of a rebuild.
+
+And some things simply cannot go to CI. `fabric-wt-harness` drives the transport against a
+Godot server on loopback, and `bench_players` measures a pinned core; a shared runner whose
+neighbour is busy is not a core worth recording. That is why `bench_players` reports the budget
+and only asserts it under `--gate`.
+
+CI earns its keep where the machine runs out: the platforms this desk is not (Linux, macOS,
+Android, web), the matrix that would take all afternoon serially, and the check that the branch
+builds somewhere other than where it was written. `fabric-godot-core`'s `runner.yml` triggers on
+any push to any branch, so that is available the moment it is wanted — after the local run, not
+instead of it.
+
 ## Comments
 
 - Match the comment density of FoundationDB, which is 12 to 14 percent of non-blank lines in
@@ -64,3 +114,7 @@ the merge actually took, and it is the number to trust.
 
 Most of this workspace is above that today. It comes down as files are touched, not in a sweep:
 a commit that only reflows comments costs a review and proves nothing.
+
+## How to deploy Godot Engine
+
+- `scons production=yes precision=double debug_symbols=yes accesskit=yes`
