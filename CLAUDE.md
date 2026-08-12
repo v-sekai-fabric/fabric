@@ -137,6 +137,47 @@ window, so it is evidence about the editor and nothing else. And driving the run
 has killed it mid-session — the editor's survived, the game's stopped answering — so a bridge
 that goes quiet is a restart rather than a finding about the code under test.
 
+## Taking inventory
+
+A workspace of twenty-eight repositories loses work on disk, not in review. Before changing
+lanes, after any long task, and before saying what is left to do, take stock — from the
+repositories, never from memory.
+
+```sh
+cd P:/fabric-gyre-meta
+for d in */; do d=${d%/}; [ -d "$d/.git" ] || continue; cd "$d"
+  u=$(git status --porcelain | grep -c '^??')
+  m=$(git status --porcelain | grep -vc '^??')
+  b=$(git branch --show-current)
+  up=$(git rev-parse --verify -q "origin/$b" >/dev/null 2>&1 || echo NO-UPSTREAM)
+  ah=$(git rev-list --count "origin/$b..HEAD" 2>/dev/null || echo ?)
+  [ "$u$m$ah" != "000" -o -n "$up" ] && printf '%-28s %-30s untracked=%-4s modified=%-4s ahead=%-4s %s\n' \
+    "$d" "$b" "$u" "$m" "$ah" "$up"
+  cd ..
+done
+```
+
+Then separate the real from the noise, because most of what it prints is noise. A Windows
+checkout of a repository with shell scripts in it reports a hundred files `modified` that are
+`mode change 100755 => 100644` and zero insertions. `git diff --stat` tells them apart in one
+line, and an inventory that does not do that buries three real items under three hundred.
+
+**Rank by risk of loss, not by value.** In order:
+
+1. **Untracked files.** They survive nothing — not a stash, not a branch switch, not a `clean`.
+   An untracked file is the only state here with no copy anywhere.
+2. **Committed but unpushed**, and branches with no upstream.
+3. **Pushed but no pull request**, then open pull requests, then stacks waiting to merge.
+4. Everything else, by value.
+
+A thing that exists in one place is worth more attention than a thing that is merely important.
+
+This is written down because it was learned twice in one day. Three files implementing an
+interactor sat untracked for hours across two status reports that both claimed to say what was
+outstanding. And a pull request was opened describing a test harness whose file had never been
+pushed — the description was accurate about the work and wrong about the repository, which is
+the failure a reviewer cannot catch.
+
 ## Comments
 
 - Match the comment density of FoundationDB, which is 12 to 14 percent of non-blank lines in
