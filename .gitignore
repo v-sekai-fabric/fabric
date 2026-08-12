@@ -7,6 +7,9 @@
 /vsekai-godot-mcp/
 /blender-mcp/
 /fabric-*-edge/
+/fabric-godot-service/
+/fabric-physics-service/
+/fabric-physics-interactor/
 /foundationdb/
 /multiplayer-fabric-manuals/
 /lean-*/
