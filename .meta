@@ -1,6 +1,6 @@
 {
   "projects": {
-    "fabric-godot-core": "https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core.git",
+    "fabric-godot-core": "--branch gyre https://github.com/v-sekai-multiplayer-fabric/fabric-godot-core.git",
     "godot-images": "https://github.com/v-sekai-multiplayer-fabric/godot-images.git",
     "fabric-godot-assembly": "https://github.com/v-sekai-multiplayer-fabric/fabric-godot-assembly.git",
     "vsekai-godot-mcp": "https://github.com/v-sekai-multiplayer-fabric/vsekai-godot-mcp.git",
