@@ -31,7 +31,16 @@
     "taskweft": "--branch main https://github.com/taskweft/taskweft.git",
     "flowref": "--branch main https://github.com/fire/flowref.git",
     "flowref-decompiler": "--branch main https://github.com/fire/flowref-decompiler.git",
+    "V-Sekai.cassie": "--branch main https://github.com/V-Sekai/V-Sekai.cassie.git",
+    "cassie": "--branch main https://github.com/V-Sekai/cassie.git",
+    "cassie-data": "--branch master https://github.com/V-Sekai/cassie-data.git",
+    "idtx-flow": "--branch main https://github.com/v-sekai-multiplayer-fabric/idtx-flow.git",
+    "fabric-flow-adapters": "--branch main-fabric https://github.com/v-sekai-multiplayer-fabric/fabric-flow-adapters.git",
+    "fabric-flow-adapters-project": "--branch main https://github.com/v-sekai-multiplayer-fabric/fabric-flow-adapters-project.git",
+    "xr-grid": "--branch main https://github.com/V-Sekai/xr-grid.git",
+    "TOOL_model_explorer": "--branch main https://github.com/V-Sekai/TOOL_model_explorer.git",
     "fabric-wt-harness": "--branch main https://github.com/v-sekai-multiplayer-fabric/fabric-wt-harness.git",
-    "wallpaper-parsec": "--branch main https://github.com/v-sekai-multiplayer-fabric/wallpaper-parsec.git"
+    "wallpaper-parsec": "--branch main https://github.com/v-sekai-multiplayer-fabric/wallpaper-parsec.git",
+    "LabRCSF": "--branch dev https://github.com/meshula/LabRCSF.git"
   }
 }
