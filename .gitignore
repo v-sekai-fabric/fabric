@@ -32,3 +32,4 @@
 # Scratch that is neither a child repo nor a build artefact.
 node_modules/
 /wallpaper-parsec/
+/.playwright-mcp/
