@@ -1,4 +1,4 @@
-# fabric-gyre-meta
+# fabric
 
 Conventions for every project in this workspace. A `CLAUDE.md` in a parent directory loads for
 the directories under it, so these hold in each repository `.meta` names without being copied
@@ -17,8 +17,8 @@ change on its own, so two checkouts made a month apart can differ with nothing h
 
 Writing the obvious ones is the whole point. If only the unusual entries carry a branch, a
 missing one means "the default, probably" and a present one means "look closer", and neither is
-checkable. Two of the twenty-eight are already not what a reader would guess —
-`fabric-godot-core` tracks `gyre` while its own default is `master`, and `lean-http3-queue`
+checkable. Two of the forty-two are already not what a reader would guess —
+`entities-godot` tracks `gyre` while its own default is `master`, and `lean-http3-queue`
 defaults to `master` unlike every other `lean-*`. Stating all of them makes those two ordinary
 lines rather than discoveries, and makes the next one visible in a diff.
 
@@ -69,7 +69,7 @@ habit of the `lean-*` hexagons rather than a rule. It is a rule, and the reason 
 manifest's reason is: a value left out is not absent, it is recorded somewhere else. Provenance
 stated only in prose is stated once, in whichever paragraph happened to need it, and a reader
 asking "what is this made of" has to read the whole `README.md` and trust that nothing was
-dropped. `fabric-physics-service` is the case that makes it plain — a clone of one repository,
+dropped. `service-physics` is the case that makes it plain — a clone of one repository,
 vendoring a second and a third, implementing somebody else's published design, against numbers
 proved in four Lean hexagons. None of that is visible in a dependency file, because there is no
 dependency file that could hold a journal article.
@@ -85,7 +85,7 @@ dependency file that could hold a journal article.
   desk is also what the headset is plugged into and what a test client runs on.
 
 Local is cheaper for a reason that has nothing to do with who pays for the runner. A local build
-is **incremental** and a CI build is always cold. The Godot editor build in `fabric-godot-core`
+is **incremental** and a CI build is always cold. The Godot editor build in `entities-godot`
 is the case that shows it: an interrupted run left 2389 objects and a 19 MB `.sconsign5.dblite`,
 so resuming cost minutes where CI would have started from nothing on every push. The second run
 of anything is where local wins, and there is always a second run.
@@ -102,7 +102,7 @@ and only asserts it under `--gate`.
 
 CI earns its keep where the machine runs out: the platforms this desk is not (Linux, macOS,
 Android, web), the matrix that would take all afternoon serially, and the check that the branch
-builds somewhere other than where it was written. `fabric-godot-core`'s `runner.yml` triggers on
+builds somewhere other than where it was written. `entities-godot`'s `runner.yml` triggers on
 any push to any branch, so that is available the moment it is wanted — after the local run, not
 instead of it.
 
@@ -175,7 +175,7 @@ verified its forward and inverse round-tripped at build time. When the forward m
 and the inverse did not, it found the mismatch, printed `HILBERT INVERSE: 7 FAILURES`, and
 exited zero. The build was green with a broken pair in it. It now throws.
 
-**Where the check runs is part of the check.** `lean-shared-core` gates its curve correctly and
+**Where the check runs is part of the check.** `entities-lean-shared` gates its curve correctly and
 that gate did its job -- and it runs nowhere near the failure it needed to catch, because
 `lake-manifest.json` pins by rev. An upstream fix merged, the pin did not move, and the
 consumer sat on the old code with nothing to notice. Assert the contract against whatever is
@@ -192,12 +192,12 @@ the thing you removed, which is where this started.
 
 ## Taking inventory
 
-A workspace of twenty-eight repositories loses work on disk, not in review. Before changing
+A workspace of forty-two repositories loses work on disk, not in review. Before changing
 lanes, after any long task, and before saying what is left to do, take stock — from the
 repositories, never from memory.
 
 ```sh
-cd P:/fabric-gyre-meta
+cd P:/fabric
 for d in */; do d=${d%/}; [ -d "$d/.git" ] || continue; cd "$d"
   u=$(git status --porcelain | grep -c '^??')
   m=$(git status --porcelain | grep -vc '^??')
