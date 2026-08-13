@@ -6,8 +6,15 @@
 # Checked with:
 #
 #   python -c "import json,subprocess; [print('MISSING',n) for n in json.load(open('.meta'))['projects'] if subprocess.run(['git','check-ignore','-q',n]).returncode]"
+/LabRCSF/
+/TOOL_model_explorer/
+/V-Sekai.cassie/
 /blender-mcp/
+/cassie-data/
+/cassie/
 /fabric-*-edge/
+/fabric-flow-adapters-project/
+/fabric-flow-adapters/
 /fabric-godot-assembly/
 /fabric-godot-core/
 /fabric-godot-service/
@@ -19,10 +26,12 @@
 /flowref/
 /foundationdb/
 /godot-images/
+/idtx-flow/
 /lean-*/
 /multiplayer-fabric-manuals/
 /taskweft/
 /vsekai-godot-mcp/
+/xr-grid/
 
 # Build and run output from work done at the workspace root rather than inside a child. Logs
 # from a long engine build or a test server land here and are worth keeping on disk while a
