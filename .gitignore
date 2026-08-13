@@ -5,7 +5,12 @@
 # person to run `git status` is invited to commit somebody else's repository into this one.
 # Checked with:
 #
-#   python -c "import json,subprocess; [print('MISSING',n) for n in json.load(open('.meta'))['projects'] if subprocess.run(['git','check-ignore','-q',n]).returncode]"
+#   python -c "import json,subprocess; [print('MISSING',n) for n in json.load(open('.meta'))['projects'] if subprocess.run(['git','check-ignore','-q',n+'/']).returncode]"
+#
+# The trailing slash is the whole check. Every pattern below ends in one, so `check-ignore`
+# matches only a path it can see is a directory. Without it the command reports MISSING for
+# every child not yet cloned, which is the state a fresh checkout is in and the state this
+# check is most wanted in.
 /LabRCSF/
 /TOOL_model_explorer/
 /V-Sekai.cassie/
