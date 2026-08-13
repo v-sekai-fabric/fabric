@@ -137,6 +137,59 @@ window, so it is evidence about the editor and nothing else. And driving the run
 has killed it mid-session — the editor's survived, the game's stopped answering — so a bridge
 that goes quiet is a restart rather than a finding about the code under test.
 
+## Checks
+
+- A check MUST **fail the build**. A check that prints and returns zero is not a check, it is
+  a log line, and nobody reads the log of a build that passed.
+- Assert the **defining property**, not a consequence of it. Ask what would still be true if
+  the thing were replaced by something wrong, and test whatever answers no.
+- A gate MUST be shown to fail. Break the thing on purpose, watch the build go red, put it
+  back. A gate never seen failing is a gate nobody has evidence works.
+- Assert the property **where it is consumed**, not only where it is defined. A dependency's
+  own tests do not run in your build.
+- When the thing under test changes, the gate changes with it. A gate carried across a
+  replacement becomes a test that only passes for what was removed.
+
+All five of these were learned in one day, from one bug, and every one of them was already
+nominally covered by something that passed.
+
+`Shared.hilbert3D` was not a Hilbert curve. Walking the codes in order, 87.5% of consecutive
+pairs were not adjacent cells -- worse locality than the Morton it was chosen over, at five
+times the cost. It survived because everything being checked passed: it was a clean bijection,
+it round-tripped, `hilbert_of_aabb` carried a `CRASH_COND` round-trip witness that fired on
+every call and never once failed, and the docstring cited a paper. None of that distinguishes a
+Hilbert curve from any other bijection. The defining property was asserted nowhere, so it was
+wrong in five copies at once and in two languages.
+
+**The consequence is not the property.** A round trip closing proves the pair are inverses; it
+says nothing about which curve they are. A bijection proves no collisions; it says nothing about
+locality. Both are worth asserting and neither is the thing.
+
+`PredictiveBVH::insert` passed a space-filling code of `0u` for every node. The tree's whole
+design is to radix-sort by that code, so it sorted a constant and fell back to insertion order.
+It returned correct results throughout, which is why it went unnoticed -- the defect was in
+ordering quality, and nothing asserted the codes were ever distinct.
+
+**A check that reports is worse than no check**, because it reads as coverage. `CodeGen.lean`
+verified its forward and inverse round-tripped at build time. When the forward moved upstream
+and the inverse did not, it found the mismatch, printed `HILBERT INVERSE: 7 FAILURES`, and
+exited zero. The build was green with a broken pair in it. It now throws.
+
+**Where the check runs is part of the check.** `lean-shared-core` gates its curve correctly and
+that gate did its job -- and it runs nowhere near the failure it needed to catch, because
+`lake-manifest.json` pins by rev. An upstream fix merged, the pin did not move, and the
+consumer sat on the old code with nothing to notice. Assert the contract against whatever is
+actually pinned; `PredictiveBvh.core.CurveContract` is the pattern.
+
+**Verify the gate by breaking the thing.** Every gate written that day was confirmed by staling
+the manifest, rebuilding, and watching it go red before being put back. Two readings during that
+were confidently wrong from stale `.olean` files pointing in opposite directions, so force the
+rebuild before believing any result -- including a result you like.
+
+And when the curve was replaced, its contiguity gate had to be deleted rather than kept: Morton
+fails it by design. A gate that outlives what it was written for is a test that passes only for
+the thing you removed, which is where this started.
+
 ## Taking inventory
 
 A workspace of twenty-eight repositories loses work on disk, not in review. Before changing
