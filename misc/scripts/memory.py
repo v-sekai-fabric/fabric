@@ -195,6 +195,24 @@ def verify(con):
     """
     bad = 0
     rel = _read_relations()
+    # Every reference must resolve before anything else is asked. A half-migrated set of
+    # relations -- memory.jsonl on one generation of identifiers and kinds.jsonl on the next
+    # -- is exactly what a KeyError deep inside build() reports badly and a review does not
+    # catch at all, because each file is internally well formed and only the join is broken.
+    kn = {r["kind_id"] for r in rel["kinds"]}
+    en = {r["entity_id"] for r in rel["entities"]}
+    mn = {r["memory_id"] for r in rel["memory"]}
+    for r in rel["memory"]:
+        if r["kind_id"] not in kn:
+            print(f"  memory {r['memory_id']}: kind_id {r['kind_id']} is in no kinds tuple"); bad += 1
+    for r in rel["memory_entity"]:
+        if r["memory_id"] not in mn:
+            print(f"  edge: memory_id {r['memory_id']} is in no memory tuple"); bad += 1
+        if r["entity_id"] not in en:
+            print(f"  edge: entity_id {r['entity_id']} is in no entities tuple"); bad += 1
+    if bad:
+        print(f"{bad} rows wrong")
+        return bad
     first = min(r["created"] for r in rel["memory"])
     for r in rel["kinds"]:
         if r["kind_id"] != tuple_id("kind", r["name"], first):
