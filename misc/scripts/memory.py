@@ -21,7 +21,7 @@ plain file when none is, so the rows are the same either way.
   memory.py recall "<query>" [-n 5]
   memory.py verify
 """
-import argparse, datetime, hashlib, json, sqlite3, sys, pathlib
+import argparse, datetime, hashlib, json, sqlite3, sys, uuid, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import hrr
 
@@ -32,6 +32,27 @@ RELATIONS = ("kinds", "entities", "memory", "memory_entity")
 # alphabetically. The keys are uuid7, so sorting on them is sorting by creation time, and a
 # new tuple lands at the end of the file instead of in the middle: the diff for one added
 # memory is the lines that were added. Sorting memory_entity by entity_id would scatter them.
+# The Parquet Variant type each column holds, by the spec's own primitive type ids.
+# https://parquet.apache.org/docs/file-format/types/variantencoding/
+#
+# The spec fixes 21 primitive types and does not say how JSON maps onto them, which is the
+# whole hazard of storing these relations as JSON: a uuid, a date and a string are all bare
+# JSON strings, so the type survives nowhere and "equivalent to the parquet" is a claim
+# nobody can check. int8 through int64 and decimal4 through decimal16 collapse the same way,
+# which is the reason the identifiers are uuid (id 20) rather than the integers they were.
+#
+# Declaring the id here makes the claim checkable: verify round-trips every value through
+# the binary encoding the spec names and fails when the value is not exactly what that
+# encoding gives back. A date that is not a real date, an id that is not sixteen bytes, or a
+# string that is not valid UTF-8 stops being a string that merely looks wrong.
+VARIANT = {
+    "kinds": {"kind_id": 20, "name": 16},
+    "entities": {"entity_id": 20, "name": 16},
+    "memory": {"memory_id": 20, "kind_id": 20, "content": 16, "created": 11},
+    "memory_entity": {"memory_id": 20, "entity_id": 20},
+}
+VARIANT_NAMES = {11: "date", 16: "string", 20: "uuid"}
+
 SORT_KEYS = {
     "kinds": ("kind_id",),
     "entities": ("entity_id",),
@@ -102,6 +123,43 @@ def tuple_id(kind, key, created):
     b[8] = 0x80 | (b[8] & 0x3F)          # variant 10
     x = b.hex()
     return f"{x[0:8]}-{x[8:12]}-{x[12:16]}-{x[16:20]}-{x[20:32]}"
+
+
+def variant_encode(type_id, value):
+    """The value as the Variant spec's physical encoding for that primitive type id.
+
+    Only the three this data uses are implemented, each exactly as the spec states it:
+
+      11  date    4 byte little-endian, days since 1970-01-01
+      16  string  4 byte little-endian size, then UTF-8 bytes
+      20  uuid    16 bytes, big-endian
+
+    Raising is the point. An encoder that quietly accepts whatever it is handed cannot tell
+    a date from a string that resembles one, which is the ambiguity JSON introduces and the
+    reason this exists at all.
+    """
+    if type_id == 11:
+        days = (datetime.date.fromisoformat(value) - datetime.date(1970, 1, 1)).days
+        return days.to_bytes(4, "little", signed=True)
+    if type_id == 16:
+        b = value.encode("utf-8")
+        return len(b).to_bytes(4, "little") + b
+    if type_id == 20:
+        return uuid.UUID(value).bytes
+    raise ValueError(f"variant type {type_id} is not implemented here")
+
+
+def variant_decode(type_id, blob):
+    """The inverse, so a round trip can be compared against the value it started from."""
+    if type_id == 11:
+        return (datetime.date(1970, 1, 1)
+                + datetime.timedelta(days=int.from_bytes(blob, "little", signed=True))).isoformat()
+    if type_id == 16:
+        n = int.from_bytes(blob[:4], "little")
+        return blob[4:4 + n].decode("utf-8")
+    if type_id == 20:
+        return str(uuid.UUID(bytes=blob))
+    raise ValueError(f"variant type {type_id} is not implemented here")
 
 
 def _read_relations():
@@ -195,6 +253,55 @@ def verify(con):
     """
     bad = 0
     rel = _read_relations()
+    # Every value must survive the encoding its column declares, and this runs first: a value
+    # that is not a valid uuid or date is not a broken reference or a wrong identifier, it is
+    # not the type it claims, and reporting it as anything else sends the reader to the wrong
+    # file. Ordering is part of what a check says.
+    for n, cols in VARIANT.items():
+        for r in rel[n]:
+            for col, tid in cols.items():
+                try:
+                    back = variant_decode(tid, variant_encode(tid, r[col]))
+                except Exception as e:
+                    print(f"  {n}.{col}: {r[col]!r} is not a valid "
+                          f"{VARIANT_NAMES[tid]} (variant type {tid}): {e}"); bad += 1
+                    continue
+                if back != r[col]:
+                    print(f"  {n}.{col}: {r[col]!r} round-trips through "
+                          f"{VARIANT_NAMES[tid]} as {back!r}"); bad += 1
+    if bad:
+        print(f"{bad} rows wrong")
+        return bad
+
+    # Each relation must be in its declared sort order, which is what makes an added tuple
+    # append to the file instead of landing in its middle. Losing it has already happened
+    # here, when the sort key was whichever column came first alphabetically, and one added
+    # memory rewrote every line.
+    #
+    # Parquet's DELTA_BYTE_ARRAY stores each byte array as a prefix length into the previous
+    # entry plus the suffix, so the order also decides what the column costs there. Measured
+    # over these relations, sorted against the same values shuffled:
+    #
+    #   kinds.kind_id            PLAIN  108   sorted   78   shuffled  78
+    #   entities.entity_id       PLAIN  576   sorted  346   shuffled 350
+    #   memory.memory_id         PLAIN  540   sorted  323   shuffled 328
+    #   memory_entity.memory_id  PLAIN 1260   sorted  323   shuffled 748
+    #
+    # Only the last is a real win, and the reason is worth keeping straight: a uuid8 shares
+    # its 48-bit date prefix with every other uuid8 whatever the order, and the bytes below
+    # that are a hash, so sorting adds almost nothing for a column of distinct ids. What it
+    # buys is on the repeated ones, where an edge relation lists the same memory_id many
+    # times and sorting collects them -- 2.3x there and nothing to speak of elsewhere.
+    for n, key in SORT_KEYS.items():
+        want = sorted(rel[n], key=lambda r: tuple(r[c] for c in key))
+        if want != rel[n]:
+            print(f"  {n}.jsonl is not sorted on {'/'.join(key)}; "
+                  "DELTA_BYTE_ARRAY prefix sharing and the append-only diff both depend on it")
+            bad += 1
+    if bad:
+        print(f"{bad} rows wrong")
+        return bad
+
     # Every reference must resolve before anything else is asked. A half-migrated set of
     # relations -- memory.jsonl on one generation of identifiers and kinds.jsonl on the next
     # -- is exactly what a KeyError deep inside build() reports badly and a review does not
