@@ -1743,11 +1743,11 @@ option "operating_currency" "HOURS"
   Expenses:Other                 0.84 HOURS
   Income:Sessions
 
-2026-08-16 * "." "Rebuild the ledger after the merge"
+2026-08-16 * "." "Merge remote-tracking branch 'v-sekai-multiplayer-fabric/main' into budget-rail"
   spent: TRUE
-  commits: 42
+  commits: 45
   steps: "Convert the manifest from meta to repo | Merge pull request #9 from v-sekai-multiplayer-fabric/convert-to-repo-ma | Lay the checkout out as a hexagon | Gate every README this project owns at forty lines | Merge pull request #10 from v-sekai-multiplayer-fabric/lay-the-checkout- | Merge pull request #11 from v-sekai-multiplayer-fabric/gate-readmes-at-f | Type the checkouts that were left at the root | Take the names to match the types | Make every path rebuild its repository name | Merge pull request #12 from v-sekai-multiplayer-fabric/type-the-untyped- | Make the document rules checkable instead of remembered | Merge pull request #13 from v-sekai-multiplayer-fabric/make-the-document | Add entities-gyre: the Gyre's rooms, drivers, and planner ladder. | Count entities-gyre in the README, and revive the control that noticed | Merge pull request #14 from v-sekai-multiplayer-fabric/add-entitie"
-  Expenses:Fabric                4.63 HOURS
+  Expenses:Fabric                4.68 HOURS
   Income:Sessions
 
 2026-08-16 * "1-transport/asset" "Use the words RFD 0111 decided, and the names these repositories answer to (#2)"
