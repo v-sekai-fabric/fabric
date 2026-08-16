@@ -31,10 +31,13 @@
        collects whatever nobody classified, and it grew to eight of them.
 
        `path` decides the checkout directory and this repository chooses it.
-       `name` is the name on GitHub, and for four projects below another
-       organisation chose it, so those four are the only ones whose path and
-       name do not rebuild each other. check_docs.py lists them with the
-       evidence, and every other project was renamed to match its side. -->
+       `name` is the name on GitHub and the two are independent, so a project
+       sits on its side whether or not it was renamed. Recomposition asks them
+       to rebuild each other because a path that stops matching its name is how
+       a checkout drifts from what RFD 0111 decided, but it is a convention
+       this repository imposes, not something repo requires, and where a name
+       is not ours to change it is the convention that gives way. FIXED_NAMES
+       in check_docs.py lists the five, each with its reason. -->
 
   <remote name="v-sekai-multiplayer-fabric" fetch="https://github.com/v-sekai-multiplayer-fabric" />
   <remote name="v-sekai" fetch="https://github.com/V-Sekai" />
@@ -74,7 +77,9 @@
   <project name="contract-protocol" path="2-contract/protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-interest-mgmt" path="2-contract/interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-patch-verify" path="2-contract/patch-verify" remote="fire" revision="main" />
-  <project name="contract-manuals" path="2-contract/manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <!-- The manuals publish GitHub Pages, and a Pages URL does not redirect on rename,
+       so this name is a published address rather than only a repository name. -->
+  <project name="multiplayer-fabric-manuals" path="2-contract/manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 3: the interactors. Each performs actions on entities. -->
   <project name="interactor-physics" path="3-interactor/physics" remote="v-sekai-multiplayer-fabric" revision="main" />

@@ -159,16 +159,21 @@ MIRRORS = {
 }
 OUR_REMOTE = "v-sekai-multiplayer-fabric"
 
-# Names another organisation chose. The path is this repository's to pick and the name is
-# not, so recomposition asks only of repositories we can actually rename. This replaces the
-# old `vendor/` prefix exemption, which excused a directory rather than a fact: `vendor/`
-# said where code came from, and where it came from is not a position in the code. Each
-# entry states why the name is not ours to set.
-UPSTREAM_NAMES = {
+# Names that are not this repository's to change, so recomposition gives way rather than
+# forcing a rename. `path` and `name` are independent in repo -- a project sits on its side
+# either way -- so recomposition is a convention this repository imposes and these are where
+# it costs more than it is worth. This replaces the old `vendor/` prefix exemption, which
+# excused a directory rather than a fact: `vendor/` said where code came from, and where it
+# came from is not a position in the code. Each entry states its reason.
+FIXED_NAMES = {
     "cassie": "the academic CASSIE project's Unity application; the name is the paper's",
     "cassie-data": "the sketch dataset recorded for that paper",
     "idtx-flow": "Immersive-Data-Center-Management/idtx-flow, mirrored",
     "LabRCSF": "meshula/LabRCSF; we have no admin on it, so we cannot rename it",
+    # A repository name is also a published address when it serves Pages, and GitHub does
+    # not redirect a Pages URL on rename. This one was renamed to contract-manuals and every
+    # published RFD link 404'd until it was renamed back; check_pages_names is the gate.
+    "multiplayer-fabric-manuals": "it publishes GitHub Pages, whose URL contains the name",
 }
 
 
@@ -221,7 +226,7 @@ def check_path_recomposes(mtext, _rtext):
     RFD 0111 decided: a path that no longer rebuilds its own name means one of the two
     moved without the other.
 
-    The exceptions are in UPSTREAM_NAMES, and each is a fact rather than a taste: that
+    The exceptions are in FIXED_NAMES, and each is a fact rather than a taste: that
     name belongs to another organisation, so no rename here can make the path rebuild it.
     Every other project was renamed to match the side it sits on.
     """
@@ -229,7 +234,7 @@ def check_path_recomposes(mtext, _rtext):
     bad = []
     for p in projects:
         path = p["path"]
-        if p["name"] in UPSTREAM_NAMES:
+        if p["name"] in FIXED_NAMES:
             continue
         # The self-entry names no directory to recompose from; the check above owns it.
         if path == ".":
@@ -492,6 +497,45 @@ def _licence_of(org, name):
     return out.stdout.strip() if out.returncode == 0 else "NONE"
 
 
+PAGES_OVERRIDE = None
+
+
+def check_pages_names(mtext, _rtext):
+    """A project that serves GitHub Pages MUST keep the name its published URL contains.
+
+    A repository rename redirects git and the web UI. It does not redirect Pages: the site
+    moves to org.github.io/<new-name>/ and every published link 404s, with nothing in the
+    repository to notice. That is the failure this exists to stop, and it is not
+    hypothetical -- `multiplayer-fabric-manuals` was renamed to `contract-manuals` for the
+    hexagon layout and took every published RFD link with it.
+
+    So the name is a published address, and recomposition gives way to it. The check reads
+    the URL GitHub actually serves rather than a list kept by hand, because a list is the
+    thing that goes stale when Pages is switched on for something new.
+    """
+    _, _, projects = parse_manifest(mtext)
+    bad = []
+    for p in projects:
+        if p["remote"] != OUR_REMOTE:
+            continue
+        url = _pages_url(p["org"], p["name"])
+        if url is None:
+            continue
+        slug = url.rstrip("/").rsplit("/", 1)[-1]
+        if slug != p["name"]:
+            bad.append(f"{p['name']} serves Pages at {url}, whose name is {slug}; "
+                       "a Pages URL does not redirect, so the published links are dead")
+    return bad
+
+
+def _pages_url(org, name):
+    if PAGES_OVERRIDE is not None:
+        return PAGES_OVERRIDE.get(name)
+    r = subprocess.run(["gh", "api", f"repos/{org}/{name}/pages", "--jq", ".html_url"],
+                       capture_output=True, text=True)
+    return r.stdout.strip() or None if r.returncode == 0 else None
+
+
 def check_licences(mtext, _rtext):
     """Every repository this organisation owns MUST carry a usable licence.
 
@@ -530,6 +574,7 @@ CHECKS = [
     ("no document uses a word RFD 0111 retired", check_retired_words, "local"),
     ("no document names a repository that moved", check_names_resolve, "network"),
     ("every repository we own carries a usable licence", check_licences, "network"),
+    ("a project that serves Pages keeps the name its URL contains", check_pages_names, "network"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -565,6 +610,11 @@ BREAKAGE = {
     "every repository we own carries a usable licence": ("l", {"transport-fanout": "AGPL-3.0"}),
     "no document names a repository that moved": (
         "d", [("1-transport/fanout", "README.md", "It reads from fabric-authority-plane every tick.\n")]),
+    # Asking GitHub what it serves cannot be perturbed by editing a file here, so the
+    # control replaces the answer -- with the exact URL the real rename produced.
+    "a project that serves Pages keeps the name its URL contains": (
+        "p", {"multiplayer-fabric-manuals":
+              "https://v-sekai-multiplayer-fabric.github.io/contract-manuals/"}),
 }
 
 
@@ -586,11 +636,13 @@ def main():
 
     if self_test:
         print("\nnegative controls (each check must fail on broken input):")
-        global DOC_OVERRIDE
+        global DOC_OVERRIDE, PAGES_OVERRIDE
         for label, fn, _kind in selected:
             spec = BREAKAGE[label]
-            m2, r2, DOC_OVERRIDE = mtext, rtext, None
-            if spec[0] == "l":
+            m2, r2, DOC_OVERRIDE, PAGES_OVERRIDE = mtext, rtext, None, None
+            if spec[0] == "p":
+                PAGES_OVERRIDE = spec[1]
+            elif spec[0] == "l":
                 # Asking GitHub cannot be perturbed by editing a file here, so the
                 # control replaces the answer the check would have received.
                 global LICENCE_OVERRIDE
@@ -612,6 +664,7 @@ def main():
             finally:
                 DOC_OVERRIDE = None
                 LICENCE_OVERRIDE = None
+                PAGES_OVERRIDE = None
             if broke:
                 print(f"ok    {label} fails on broken input")
             else:
