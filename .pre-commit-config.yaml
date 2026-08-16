@@ -1,0 +1,34 @@
+# Doc gate, run by prek (https://github.com/j178/prek) or pre-commit.
+#
+#   prek install                 # wire both stages into .git/hooks
+#   prek run --all-files         # commit-stage checks, now
+#   prek run --hook-stage pre-push --all-files
+#
+# Commit stage is offline so it stays fast; the network claims run at pre-push, before
+# anything leaves the machine. Nothing is skipped, only deferred, and the script says so.
+repos:
+  - repo: local
+    hooks:
+      - id: check-docs
+        name: README claims match the manifest (offline)
+        entry: python3 misc/scripts/check_docs.py --local-only
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      - id: check-docs-full
+        name: README claims match the manifest and the live remotes
+        entry: python3 misc/scripts/check_docs.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
+      - id: check-docs-self-test
+        name: doc gate negative controls (each check must fail on broken input)
+        entry: python3 misc/scripts/check_docs.py --self-test
+        language: system
+        pass_filenames: false
+        files: ^(misc/scripts/check_docs\.py|README\.md|default\.xml)$
+        stages: [pre-push]
