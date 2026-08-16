@@ -239,9 +239,12 @@ def _plan_tasks():
         s = line.strip()
         if s.startswith("task:"):
             cur = s.split('"')[1]
-            tasks[cur] = {"id": cur, "depends": "", "o": 0.0, "m": 0.0, "p": 0.0, "what": ""}
+            tasks[cur] = {"id": cur, "depends": "", "o": 0.0, "m": 0.0, "p": 0.0,
+                          "what": "", "done": ""}
         elif cur and s.startswith("depends:"):
             tasks[cur]["depends"] = s.split('"')[1]
+        elif cur and s.startswith("done:"):
+            tasks[cur]["done"] = s.split(":", 1)[1].strip()
         elif cur and s.split(":")[0] in ("optimistic", "likely", "pessimistic"):
             k, _, v = s.partition(":")
             tasks[cur][{"optimistic": "o", "likely": "m", "pessimistic": "p"}[k]] = float(v)
@@ -256,6 +259,11 @@ def _plan_tasks():
     for t in tasks.values():
         t["te"] = (t["o"] + 4 * t["m"] + t["p"]) / 6
     return tasks
+
+
+def _open_tasks():
+    """Tasks still to do. A done task stays in the file as a record and leaves the path."""
+    return {k: v for k, v in _plan_tasks().items() if not v["done"]}
 
 
 def _predictive(task, draws, rng):
@@ -281,7 +289,7 @@ def path(draws=40000):
     So the tasks are sampled together and the total's own quantiles are read off. The seed
     is fixed, because a plan that changes when you look at it twice is not a plan.
     """
-    tasks = _plan_tasks()
+    tasks = _open_tasks()
 
     def chain(tid, seen=()):
         if tid in seen:
@@ -313,6 +321,11 @@ def path(draws=40000):
         slack = 0.0 if on else span - sum(tasks[i]["te"] for i in chains[tid])
         print(f"  {'path' if on else '':<4} {t['what'][:42]:<42} {t['o']:>6.2f} {t['m']:>6.2f} "
               f"{t['p']:>6.2f} {t['te']:>6.2f} {slack:>7.2f}")
+    done = [v for v in _plan_tasks().values() if v["done"]]
+    if done:
+        print()
+        for d in sorted(done, key=lambda x: x["done"]):
+            print(f"  done {d['what'][:42]:<42} {d['done']}")
     return 0
 
 
