@@ -41,3 +41,6 @@
 .repo/
 node_modules/
 /.playwright-mcp/
+
+# Built from memory/*.parquet by misc/scripts/memory.py; the relations are the source.
+/memory/fabric.sqlite3
