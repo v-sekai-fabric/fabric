@@ -95,7 +95,7 @@ the tree still in the state that produced it. The same failure in CI is a log to
 tree you cannot poke at, and a queue between every attempt — so a two-line fix costs a
 round-trip instead of a rebuild.
 
-And some things simply cannot go to CI. `fabric-wt-harness` drives the transport against a
+And some things simply cannot go to CI. `contract-wt` drives the transport against a
 Godot server on loopback, and `bench_players` measures a pinned core; a shared runner whose
 neighbour is busy is not a core worth recording. That is why `bench_players` reports the budget
 and only asserts it under `--gate`.
