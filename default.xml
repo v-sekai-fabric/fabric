@@ -57,6 +57,7 @@
   <project name="interactor-physics" path="3-interactor/physics" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 4: the entities -->
+  <project name="entities-gyre" path="4-entities/gyre" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="entities-godot" path="4-entities/godot" remote="v-sekai-multiplayer-fabric" revision="gyre" />
   <project name="entities-lean-combat" path="4-entities/lean-combat" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="entities-lean-loot" path="4-entities/lean-loot" remote="v-sekai-multiplayer-fabric" revision="main" />

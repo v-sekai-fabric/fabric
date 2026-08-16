@@ -401,7 +401,7 @@ CHECKS = [
 # nothing -- see the Checks section of CLAUDE.md.
 BREAKAGE = {
     "every path the README names exists": ("r", "misc/scripts/check_docs.py", "misc/scripts/nope_docs.py"),
-    "README counts match the manifest": ("r", "42 projects across 5", "41 projects across 5"),
+    "README counts match the manifest": ("r", "43 projects across 5", "42 projects across 5"),
     "README revision exceptions match the manifest": ("m", 'revision="gyre"', 'revision="main"'),
     "every project states remote and revision": ("m", ' remote="meshula" revision="dev"', ""),
     "<default> sets sync-j so fetches are not serial": ("m", '<default sync-j="16" />', "<default />"),

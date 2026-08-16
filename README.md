@@ -1,6 +1,6 @@
 # fabric
 
-A [repo](https://gerrit.googlesource.com/git-repo) manifest for the gyre dependencies: 42 projects across 5 GitHub orgs, from one command.
+A [repo](https://gerrit.googlesource.com/git-repo) manifest for the gyre dependencies: 43 projects across 5 GitHub orgs, from one command.
 
 ## Setup
 
