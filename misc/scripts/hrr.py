@@ -103,9 +103,36 @@ def encode_fact(content, entities, dim=DIM):
     return bundle(parts)
 
 
+# ---- Interchange: float64, byte-identical to tw_hrr.hpp -------------------
+# This is the format the C++ phases_to_bytes/bytes_to_phases read and write.
+# Use it when a vector crosses a language boundary.
+
 def phases_to_bytes(phases):
     return struct.pack(f"<{len(phases)}d", *phases)
 
 
 def bytes_to_phases(blob):
     return list(struct.unpack(f"<{len(blob)//8}d", blob))
+
+
+# ---- Storage: uint16 phase grid ------------------------------------------
+# encode_atom builds every phase as val * (2*pi / 65536) for a uint16 val, so
+# the uint16 grid is the one atoms already live on: quantising to it is exact
+# for an atom and loses at most half a grid step, 4.8e-5 rad, for a bundle.
+#
+# It is a quarter the size of float64, and it removes a defect rather than
+# trading one. bundle() sums sin and cos, float addition is not associative, so
+# in float64 the same components in a different order differ in the last bits.
+# Rounding to the grid absorbs that: the bytes are then equal regardless of the
+# order the components arrived in.
+
+_Q = 65536.0 / TWO_PI
+
+
+def phases_to_u16(phases):
+    return struct.pack(f"<{len(phases)}H", *(int(round(p * _Q)) % 65536 for p in phases))
+
+
+def u16_to_phases(blob):
+    step = TWO_PI / 65536.0
+    return [v * step for v in struct.unpack(f"<{len(blob)//2}H", blob)]
