@@ -255,6 +255,29 @@ This repository's own README was 91 lines when the rule was written and is 39 no
 `Use` and `Why not meta` sections went to git history, and the layout it described in
 prose now lives in the `default.xml` comment that decides it — one source per fact.
 
+### A found defect becomes a check
+
+Six READMEs were cut by hand before this rule was written down, and the same four defects
+turned up in every one: a title naming the repository's old name, a word RFD 0111 retired,
+a repository named by a name that now only answers on a GitHub redirect, and a path or line
+that had moved. Each was found by reading, fixed once, and left free to reappear in the next
+repository. That is the loop this section exists to end.
+
+- A defect found in a document MUST leave behind a check that would have caught it, in the
+  same change. Correcting the text is half the fix.
+- The check MUST run over every repository this organisation is the primary source of, from
+  one place. Nine gates in nine repositories is nine things to keep in step.
+- A check that reads a child's files cannot be broken by editing this repository, so its
+  negative control MUST inject a defective document instead. `DOC_OVERRIDE` in
+  `check_docs.py` is that seam, and without it those controls would pass while proving
+  nothing.
+- A check that finds nothing because it looked at nothing MUST say so. The document checks
+  print how many children they scanned, because zero reads exactly like clean.
+
+The redirect check is the one worth copying elsewhere. GitHub answers every old name
+forever, so a rename leaves prose that resolves, is wrong, and fails nowhere. RFD 0111 asks
+for the pins in the same pass as the rename; asking is not a mechanism, and this is.
+
 ## Taking inventory
 
 A workspace of forty-two repositories loses work on disk, not in review. Before changing

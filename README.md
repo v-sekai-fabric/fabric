@@ -36,4 +36,4 @@ python3 misc/scripts/check_docs.py --self-test  # plus: break each claim, requir
 prek run --all-files                            # the offline subset, wired as a hook
 ```
 
-Nine checks, each with a negative control. `CLAUDE.md` says why.
+Eleven checks, each with a negative control. `CLAUDE.md` says why.

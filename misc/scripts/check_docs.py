@@ -293,6 +293,96 @@ def check_referenced_paths(_mtext, rtext):
             bad.append(f"README names `{tok}`, which does not exist in this repo")
     return bad
 
+# --- checks that read a child's documents -------------------------------------------
+#
+# These scan files in the children rather than text passed in, so a breakage that edits
+# the manifest or the README cannot reach them. Every document they read goes through
+# _child_docs(), and DOC_OVERRIDE replaces its result. That is what makes their negative
+# controls real: the control injects a defective document and the check must go red.
+
+CHILD_DOCS = ("README.md", "CLAUDE.md", "AGENTS.md")
+DOC_OVERRIDE = None
+
+
+def _child_docs(projects):
+    """[(project_path, doc_name, text)] for our children, or the injected fixture."""
+    if DOC_OVERRIDE is not None:
+        return DOC_OVERRIDE
+    ws, out = _workspace_root(), []
+    for p in projects:
+        if p["remote"] != OUR_REMOTE or p["name"] in MIRRORS:
+            continue
+        for name in CHILD_DOCS:
+            f = ws / p["path"] / name
+            if f.exists():
+                out.append((p["path"], name, f.read_text(encoding="utf-8", errors="replace")))
+    return out
+
+
+def _name_for_path(projects, path):
+    for p in projects:
+        if p["path"] == path:
+            return p["name"]
+    return path.rsplit("/", 1)[-1]
+
+
+def check_retired_words(mtext, _rtext):
+    """RFD 0111 retired plane, edge plane, and domain as nouns for a process.
+
+    Only the compounds that RFD 0111 names are matched. "Control plane" and "data plane"
+    survive it, because they name a class of traffic rather than a process, so a document
+    using either is not a finding.
+    """
+    _, _, projects = parse_manifest(mtext)
+    pats = [
+        (r"\bedge planes?\b", "edge plane -> transport layer"),
+        (r"\bstore planes?\b", "store plane -> data source"),
+        (r"\bplane rules?\b", "plane rule -> interactor rule"),
+    ]
+    bad = []
+    for path, name, text in _child_docs(projects):
+        for n, line in enumerate(text.splitlines(), 1):
+            for pat, fix in pats:
+                if re.search(pat, line, re.I):
+                    bad.append(f"{path}/{name}:{n} {fix}")
+    return bad
+
+
+def _org_repo_names():
+    out = subprocess.run(
+        ["gh", "api", f"orgs/{OUR_REMOTE}/repos?per_page=100", "--paginate", "--jq", ".[].name"],
+        capture_output=True, text=True, timeout=180)
+    return set(out.stdout.split()) if out.returncode == 0 else set()
+
+
+def check_names_resolve(mtext, _rtext):
+    """No document may name a repository that only answers on a redirect.
+
+    GitHub keeps every old name working, so a rename leaves prose that resolves and is
+    wrong, and nothing fails anywhere. RFD 0111 asks for the pins in the same pass as the
+    rename, and this is what makes that checkable rather than remembered.
+    """
+    _, _, projects = parse_manifest(mtext)
+    live = _org_repo_names()
+    if not live:
+        return ["cannot list the organisation's repositories"]
+    resolved, bad = {}, []
+    for path, name, text in _child_docs(projects):
+        # A fenced block is a command or a config, not prose making a claim, and a clone
+        # URL that still redirects is somebody's working command line.
+        prose = re.sub(r"```.*?```", "", text, flags=re.S)
+        for tok in sorted(set(re.findall(r"\b[a-z][a-z0-9]*(?:-[a-z0-9]+){1,4}\b", prose))):
+            if tok in live:
+                continue
+            if tok not in resolved:
+                r = subprocess.run(["gh", "api", f"repos/{OUR_REMOTE}/{tok}", "--jq", ".name"],
+                                   capture_output=True, text=True, timeout=30)
+                resolved[tok] = r.stdout.strip() if r.returncode == 0 else None
+            if resolved[tok] and resolved[tok] != tok:
+                bad.append(f"{path}/{name} names {tok}, which is now {resolved[tok]}")
+    return sorted(set(bad))
+
+
 CHECKS = [
     ("every path the README names exists", check_referenced_paths, "network"),
     ("README counts match the manifest", check_counts, "local"),
@@ -303,6 +393,8 @@ CHECKS = [
     ("every project directory is gitignored", check_gitignore_covers_projects, "local"),
     ("every README this project owns is under 40 lines", check_readme_length, "local"),
     ("every path recomposes to its repository name", check_path_recomposes, "local"),
+    ("no document uses a word RFD 0111 retired", check_retired_words, "local"),
+    ("no document names a repository that moved", check_names_resolve, "network"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -324,6 +416,13 @@ BREAKAGE = {
     # Moving a project to a directory its name does not rebuild is exactly the drift
     # this gate exists to catch.
     "every path recomposes to its repository name": ("m", 'path="engine/images"', 'path="engine/pictures"'),
+    # The three checks below read a child's documents, which no edit to the manifest or to
+    # this repository's README can reach. Their controls inject a defective document
+    # instead, so each one is shown failing on the exact defect it exists to catch.
+    "no document uses a word RFD 0111 retired": (
+        "d", [("1-transport/fanout", "README.md", "An edge plane is a plane with networking.\n")]),
+    "no document names a repository that moved": (
+        "d", [("1-transport/fanout", "README.md", "It reads from fabric-authority-plane every tick.\n")]),
 }
 
 
@@ -345,19 +444,37 @@ def main():
 
     if self_test:
         print("\nnegative controls (each check must fail on broken input):")
+        global DOC_OVERRIDE
         for label, fn, _kind in selected:
-            which, old, new = BREAKAGE[label]
-            m2 = mtext.replace(old, new) if which == "m" else mtext
-            r2 = rtext.replace(old, new) if which == "r" else rtext
-            if (m2, r2) == (mtext, rtext):
-                print(f"FAIL  {label}: breakage pattern no longer matches; control is dead")
-                failed += 1
-                continue
-            if fn(m2, r2):
+            spec = BREAKAGE[label]
+            m2, r2, DOC_OVERRIDE = mtext, rtext, None
+            if spec[0] == "d":
+                # A check that reads a child's documents can only be broken by giving it a
+                # broken document. Passing it the real tree would prove nothing.
+                DOC_OVERRIDE = spec[1]
+            else:
+                which, old, new_ = spec
+                m2 = mtext.replace(old, new_) if which == "m" else mtext
+                r2 = rtext.replace(old, new_) if which == "r" else rtext
+                if (m2, r2) == (mtext, rtext):
+                    print(f"FAIL  {label}: breakage pattern no longer matches; control is dead")
+                    failed += 1
+                    continue
+            try:
+                broke = bool(fn(m2, r2))
+            finally:
+                DOC_OVERRIDE = None
+            if broke:
                 print(f"ok    {label} fails on broken input")
             else:
                 print(f"FAIL  {label} PASSED on broken input — it is decoration")
                 failed += 1
+
+    # A document check with no children on disk passes because it saw nothing, which reads
+    # exactly like passing because everything was clean. Say which it was.
+    seen = len({d[0] for d in _child_docs(parse_manifest(mtext)[2])})
+    print(f"note   the document checks scanned {seen} children"
+          + ("; a bare clone has none, and they hold where the workspace is" if not seen else ""))
 
     for label in deferred:
         print(f"defer  {label}  (runs at pre-push, not skipped)")
