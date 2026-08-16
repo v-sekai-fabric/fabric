@@ -35,5 +35,5 @@
 node_modules/
 /.playwright-mcp/
 
-# Built from memory/*.jsonl by misc/scripts/memory.py; the relations are the source.
+# Built from memory/*.usda by misc/scripts/memory.py; the relations are the source.
 /memory/fabric.sqlite3

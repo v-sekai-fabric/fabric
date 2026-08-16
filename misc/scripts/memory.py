@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Fabric memory: ETNF relations as JSON Lines, built into a SQLite index.
+"""Fabric memory: ETNF relations as USD layers, built into a SQLite index.
 
-The JSON Lines relations are the source and the only thing committed. The SQLite
+The .usda relations are the source and the only thing committed. The SQLite
 database and its HRR vectors are derived: encode_atom is SHA-256 over the text,
 so `build` reproduces them byte for byte from the same relations on any machine.
 Committing both would store the same facts twice, and the derived copy is 31x
@@ -16,12 +16,12 @@ The database is an ordinary SQLite file. It opens through the `weft_fdb` VFS whe
 one is registered -- the same VFS `datasource-queen` opens `queen` with -- and as a
 plain file when none is, so the rows are the same either way.
 
-  memory.py build                      jsonl -> sqlite, with the vectors
+  memory.py build                      usda -> sqlite, with the vectors
   memory.py add "<content>" --kind feedback --entities fabric cassie
   memory.py recall "<query>" [-n 5]
   memory.py verify
 """
-import argparse, datetime, hashlib, json, sqlite3, sys, uuid, pathlib
+import argparse, datetime, hashlib, re, sqlite3, subprocess, sys, uuid, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import hrr
 
@@ -162,25 +162,119 @@ def variant_decode(type_id, blob):
     raise ValueError(f"variant type {type_id} is not implemented here")
 
 
+USDA_HEADER = "#usda 1.0\n(\n    customLayerData = {\n"
+
+
+def _usda_escape(s):
+    """USD string literal quoting: backslash and double quote, then the C escapes."""
+    return (s.replace("\\", "\\\\").replace('"', '\\"')
+             .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t"))
+
+
+def _usda_unescape(s):
+    out, i = [], 0
+    while i < len(s):
+        c = s[i]
+        if c == "\\" and i + 1 < len(s):
+            nxt = s[i + 1]
+            out.append({"n": "\n", "r": "\r", "t": "\t"}.get(nxt, nxt)); i += 2
+        else:
+            out.append(c); i += 1
+    return "".join(out)
+
+
+def _write_relations(rel):
+    """One USD layer per relation, as a typed dictionary keyed by the relation's own key.
+
+    Written with the standard library rather than through pxr, on purpose. The V-Sekai
+    codeless schemas in openusd-fabric already record why: their own docstring says
+    skipCodeGeneration exists to avoid "the ABI trap between Blender's bundled USD, Unity's
+    bundled USD, and the build idtx-flow links against". A pip-installed pxr would be a
+    fourth USD in that list, pinned to this script, for the sake of reading four flat tables
+    of strings. The layer this emits is plain canonical usda, so every USD already in the
+    workspace reads it and none of them is a dependency of this file.
+
+    What keeps the emitter honest is not care, it is usdcat: verify re-emits every layer
+    through the system USD and requires the bytes back to be the bytes written. An emitter
+    that drifts from canonical form fails there rather than at the next reader.
+
+    The key is not repeated inside its value, and memory_entity groups its edges under the
+    memory they belong to. That is a storage encoding; _read_relations returns flat tuples,
+    so the relations stay in the first normal form every other check reads them as.
+    """
+    for n, rows in rel.items():
+        assert all(v is not None for r in rows for v in r.values()), f"nulls in {n} violate ETNF"
+        d = {}
+        if n == "memory_entity":
+            for r in rows:
+                d.setdefault(r["memory_id"], []).append(r["entity_id"])
+            body = "".join(
+                f'            dictionary "{k}" = {{\n'
+                f'                string[] entity_id = [{", ".join(chr(34) + _usda_escape(e) + chr(34) for e in sorted(set(v)))}]\n'
+                f'            }}\n'
+                for k, v in sorted(d.items()))
+        else:
+            key = SORT_KEYS[n][0]
+            for r in rows:
+                d[r[key]] = {c: v for c, v in r.items() if c != key}
+            body = "".join(
+                f'            dictionary "{k}" = {{\n'
+                + "".join(f'                string {c} = "{_usda_escape(v[c])}"\n' for c in sorted(v))
+                + f'            }}\n'
+                for k, v in sorted(d.items()))
+        text = (USDA_HEADER + f"        dictionary {n} = {{\n" + body
+                + "        }\n    }\n)\n\n")
+        (ROOT / f"{n}.usda").write_text(text, encoding="utf-8")
+
+
+_ENTRY = re.compile(r'^\s*dictionary "([^"]+)" = \{$')
+_STR = re.compile(r'^\s*string (\w+) = "(.*)"$')
+_ARR = re.compile(r'^\s*string\[\] (\w+) = \[(.*)\]$')
+
+
 def _read_relations():
-    """One JSON object per line, one line per tuple."""
+    """The relations, from one USD layer each, parsed over the subset this file writes.
+
+    Deliberately narrow. It reads the canonical form _write_relations emits and nothing
+    else, which is safe only because usdcat is what certifies that form: a layer that parses
+    here but is not canonical usda fails verify, and a layer that is canonical usda but was
+    written by something else is not what this reads. The narrowness is the contract.
+    """
     rel = {}
     for n in RELATIONS:
-        rows = [json.loads(l) for l in (ROOT / f"{n}.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
+        rows, key = [], None
+        for line in (ROOT / f"{n}.usda").read_text(encoding="utf-8").splitlines():
+            m = _ENTRY.match(line)
+            if m:
+                key = _usda_unescape(m.group(1)); cur = {}
+                if n != "memory_entity":
+                    cur[SORT_KEYS[n][0]] = key
+                    rows.append(cur)
+                continue
+            m = _ARR.match(line)
+            if m and key is not None:
+                for e in re.findall(r'"((?:[^"\\]|\\.)*)"', m.group(2)):
+                    rows.append({"memory_id": key, "entity_id": _usda_unescape(e)})
+                continue
+            m = _STR.match(line)
+            if m and key is not None:
+                cur[m.group(1)] = _usda_unescape(m.group(2))
         assert all(v is not None for r in rows for v in r.values()), f"nulls in {n} violate ETNF"
         rel[n] = rows
     return rel
 
 
-def _write_relations(rel):
-    """Sorted, one tuple per line, so a diff shows the tuples that changed."""
-    for n, rows in rel.items():
-        assert all(v is not None for r in rows for v in r.values()), f"nulls in {n} violate ETNF"
-        key = SORT_KEYS[n]
-        rows = sorted(rows, key=lambda r: tuple(r[c] for c in key))
-        with open(ROOT / f"{n}.jsonl", "w", encoding="utf-8") as f:
-            for r in rows:
-                f.write(json.dumps(r, sort_keys=True, ensure_ascii=False) + "\n")
+def usdcat_roundtrip(path):
+    """The bytes system USD gives back for a layer, or None when it will not read it."""
+    out = pathlib.Path(str(path) + ".check.usda")
+    try:
+        r = subprocess.run(["usdcat", str(path), "-o", str(out)],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            return None, (r.stderr.strip().splitlines() or [""])[-1][:160]
+        return out.read_text(encoding="utf-8"), None
+    finally:
+        out.unlink(missing_ok=True)
 
 
 def build(con):
@@ -273,31 +367,26 @@ def verify(con):
         print(f"{bad} rows wrong")
         return bad
 
-    # Each relation must be in its declared sort order, which is what makes an added tuple
-    # append to the file instead of landing in its middle. Losing it has already happened
-    # here, when the sort key was whichever column came first alphabetically, and one added
-    # memory rewrote every line.
+    # System USD must accept every layer and give back the bytes that were written. This
+    # replaces the sort-order check that used to sit here: usdcat re-emits canonical form,
+    # which sorts the keys, so a layer whose entries are out of order comes back different
+    # and fails. One check now covers both, and the authority for what canonical means is
+    # USD rather than this file.
     #
-    # Parquet's DELTA_BYTE_ARRAY stores each byte array as a prefix length into the previous
-    # entry plus the suffix, so the order also decides what the column costs there. Measured
-    # over these relations, sorted against the same values shuffled:
-    #
-    #   kinds.kind_id            PLAIN  108   sorted   78   shuffled  78
-    #   entities.entity_id       PLAIN  576   sorted  346   shuffled 350
-    #   memory.memory_id         PLAIN  540   sorted  323   shuffled 328
-    #   memory_entity.memory_id  PLAIN 1260   sorted  323   shuffled 748
-    #
-    # Only the last is a real win, and the reason is worth keeping straight: a uuid8 shares
-    # its 48-bit date prefix with every other uuid8 whatever the order, and the bytes below
-    # that are a hash, so sorting adds almost nothing for a column of distinct ids. What it
-    # buys is on the repeated ones, where an edge relation lists the same memory_id many
-    # times and sorting collects them -- 2.3x there and nothing to speak of elsewhere.
-    for n, key in SORT_KEYS.items():
-        want = sorted(rel[n], key=lambda r: tuple(r[c] for c in key))
-        if want != rel[n]:
-            print(f"  {n}.jsonl is not sorted on {'/'.join(key)}; "
-                  "DELTA_BYTE_ARRAY prefix sharing and the append-only diff both depend on it")
-            bad += 1
+    # The order still matters for the same two reasons it did. An added tuple appends to a
+    # sorted file rather than landing in its middle, and Parquet's DELTA_BYTE_ARRAY stores
+    # each byte array as a prefix length into the previous entry plus the suffix, so sorted
+    # keys that share a prefix cost only their difference. Measured over these relations,
+    # sorted against the same values shuffled, that is worth 2.3x on memory_entity, where
+    # the same memory_id repeats across edges, and almost nothing on the columns of distinct
+    # ids -- a uuid8 shares its date prefix whatever the order and the bytes below are hash.
+    for n in RELATIONS:
+        path = ROOT / f"{n}.usda"
+        got, err = usdcat_roundtrip(path)
+        if err is not None:
+            print(f"  {n}.usda: system USD will not read it: {err}"); bad += 1
+        elif got != path.read_text(encoding="utf-8"):
+            print(f"  {n}.usda: is not canonical USD; usdcat re-emits it differently"); bad += 1
     if bad:
         print(f"{bad} rows wrong")
         return bad
