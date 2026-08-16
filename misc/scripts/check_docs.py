@@ -395,6 +395,61 @@ def check_names_resolve(mtext, _rtext):
     return sorted(set(bad))
 
 
+# Google's third-party licence policy, https://opensource.google/documentation/reference/thirdparty/licenses
+#
+# Notice / permissive / unencumbered ship anywhere. Reciprocal ships but obliges
+# source mirroring. Restricted taints and obliges disclosure. The last set cannot
+# be used at all. A repository with no licence at all is the worst case of the
+# lot: default copyright reserves every right, so nobody may redistribute it, and
+# publishing it openly does not change that.
+LICENCE_RESTRICTED = {
+    "GPL-1.0", "GPL-2.0", "GPL-3.0", "LGPL-2.0", "LGPL-2.1", "LGPL-3.0",
+    "CC-BY-SA-4.0", "CERN-OHL-S-2.0",
+}
+LICENCE_FORBIDDEN = {
+    "AGPL-1.0", "AGPL-3.0", "SSPL-1.0", "OSL-3.0", "CPAL-1.0", "EUPL-1.1",
+    "EUPL-1.2", "CC-BY-NC-4.0", "CC-BY-NC-SA-4.0", "CC-BY-NC-ND-4.0",
+    "Watcom-1.0", "BUSL-1.1",
+}
+LICENCE_UNSET = {"", "NONE", "NOASSERTION", "null", None}
+
+# Injected by the self-test. A check that asks GitHub cannot be broken by editing
+# a file here, so its control replaces the answer instead.
+LICENCE_OVERRIDE = None
+
+
+def _licence_of(org, name):
+    if LICENCE_OVERRIDE is not None:
+        return LICENCE_OVERRIDE.get(name, "MIT")
+    out = subprocess.run(["gh", "api", f"repos/{org}/{name}", "--jq", '.license.spdx_id // "NONE"'],
+                         capture_output=True, text=True, timeout=30)
+    return out.stdout.strip() if out.returncode == 0 else "NONE"
+
+
+def check_licences(mtext, _rtext):
+    """Every repository this organisation owns MUST carry a usable licence.
+
+    Checked against Google's third-party policy. A restricted licence taints what
+    links it and obliges disclosure; a forbidden one cannot be shipped at all. No
+    licence is worse than either: default copyright reserves every right, so an
+    unlicensed repository is one nobody may redistribute, including us.
+    """
+    root, remotes, projects = parse_manifest(mtext)
+    org = (remotes.get(OUR_REMOTE) or "").rsplit("/", 1)[-1]
+    bad = []
+    for p in projects:
+        if p["remote"] != OUR_REMOTE or p["name"] in MIRRORS:
+            continue
+        lic = _licence_of(org, p["name"])
+        if lic in LICENCE_UNSET:
+            bad.append(f"{p['name']} has no licence; default copyright reserves every right")
+        elif lic in LICENCE_FORBIDDEN:
+            bad.append(f"{p['name']} is {lic}, which the policy forbids outright")
+        elif lic in LICENCE_RESTRICTED:
+            bad.append(f"{p['name']} is {lic}, restricted: it taints what links it")
+    return sorted(bad)
+
+
 CHECKS = [
     ("every path the README names exists", check_referenced_paths, "network"),
     ("README counts match the manifest", check_counts, "local"),
@@ -407,6 +462,7 @@ CHECKS = [
     ("every path recomposes to its repository name", check_path_recomposes, "local"),
     ("no document uses a word RFD 0111 retired", check_retired_words, "local"),
     ("no document names a repository that moved", check_names_resolve, "network"),
+    ("every repository we own carries a usable licence", check_licences, "network"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -435,6 +491,7 @@ BREAKAGE = {
     # instead, so each one is shown failing on the exact defect it exists to catch.
     "no document uses a word RFD 0111 retired": (
         "d", [("1-transport/fanout", "README.md", "An edge plane is a plane with networking.\n")]),
+    "every repository we own carries a usable licence": ("l", {"transport-fanout": "AGPL-3.0"}),
     "no document names a repository that moved": (
         "d", [("1-transport/fanout", "README.md", "It reads from fabric-authority-plane every tick.\n")]),
 }
@@ -462,7 +519,12 @@ def main():
         for label, fn, _kind in selected:
             spec = BREAKAGE[label]
             m2, r2, DOC_OVERRIDE = mtext, rtext, None
-            if spec[0] == "d":
+            if spec[0] == "l":
+                # Asking GitHub cannot be perturbed by editing a file here, so the
+                # control replaces the answer the check would have received.
+                global LICENCE_OVERRIDE
+                LICENCE_OVERRIDE = spec[1]
+            elif spec[0] == "d":
                 # A check that reads a child's documents can only be broken by giving it a
                 # broken document. Passing it the real tree would prove nothing.
                 DOC_OVERRIDE = spec[1]
@@ -478,6 +540,7 @@ def main():
                 broke = bool(fn(m2, r2))
             finally:
                 DOC_OVERRIDE = None
+                LICENCE_OVERRIDE = None
             if broke:
                 print(f"ok    {label} fails on broken input")
             else:
