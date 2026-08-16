@@ -351,14 +351,14 @@ session length by size.
 
 **Measured across every checkout here, 475 sessions over six months:**
 
-| session size | n | o (p10) | m (p50) | p (p90) | te |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 2–4 commits | 220 | 0.02 h | 1.05 h | 3.91 h | **1.35 h** |
-| 5–9 commits | 66 | 1.14 h | 3.86 h | 8.61 h | **4.20 h** |
-| 10–24 commits | 102 | 1.95 h | 8.14 h | 16.31 h | **8.47 h** |
-| 25+ commits | 87 | 8.90 h | 14.68 h | 21.10 h | **14.79 h** |
+| session size  |   n | o (p10) | m (p50) | p (p90) |          te |
+| ------------- | --: | ------: | ------: | ------: | ----------: |
+| 2–4 commits   | 220 |  0.02 h |  1.05 h |  3.91 h |  **1.35 h** |
+| 5–9 commits   |  66 |  1.14 h |  3.86 h |  8.61 h |  **4.20 h** |
+| 10–24 commits | 102 |  1.95 h |  8.14 h | 16.31 h |  **8.47 h** |
+| 25+ commits   |  87 |  8.90 h | 14.68 h | 21.10 h | **14.79 h** |
 
-Size a task by the commits it will take — which is a guess about *shape*, and a far easier one
+Size a task by the commits it will take — which is a guess about _shape_, and a far easier one
 than a guess about hours — and read the row.
 
 Re-derive the table rather than trusting these numbers forever; they are this org, this year,
@@ -396,6 +396,69 @@ one branch of the plan depends on a property nothing has measured — determinis
 limit — the measurement precedes both branches, because until it lands every downstream estimate
 has a pessimistic case that includes "and then throw it away".
 
+## Continuous delivery
+
+Ordering work says what to do next. This says whether it happened, which is a different
+question and the one that was never asked.
+
+- The hours are **booked**, in `ledger/delivery.beancount`, generated from git by
+  `misc/scripts/ledger.py` and never typed. A session is a run of commits with no gap over
+  four hours, and its cost is the span from its first commit to its last.
+- **A month that books less than one small session to the deliverable fails the build.**
+  `check_deliverable_moved` is that gate, at 1.16 h over thirty days.
+- The **plan lives in the ledger too**, in `ledger/plan.beancount`: a task is a
+  transaction, its three points are metadata, and `ledger.py path` computes the critical
+  path from the dependencies rather than from a picture somebody drew.
+- Beancount is an **operating-system tool, like gcc**. `brew install beancount`. Never
+  vendored and never imported — it is GPL-2.0, which the licence policy here files as
+  restricted, so keeping it outside the tree is a licence decision as well as a dependency
+  one. Only the accounting files are tracked. `bean-check` ends `sys.exit(1 if errors
+  else 0)`, which is what makes it a gate rather than a report.
+
+Every gate in this repository asked whether a document was true. None asked whether
+anything was delivered, and the difference is the whole failure. Measured over ninety days:
+**21.2% of hours went to documents about the mesh and 7.4% to the mesh**, and every gate was
+green throughout. One day inside that window merged nineteen pull requests, none of them on
+the critical path. A green gate closes a check, not a deliverable.
+
+### Estimate at the 1st and 99th percentile, and Bayesian
+
+The three points are quantiles of a **posterior predictive**, not of the observed sample.
+Session length is lognormal with a Jeffreys prior, so the estimate carries uncertainty
+about the parameters as well as spread.
+
+This is not pedantry, it is the difference between a plan and a flattering one. The
+empirical 1st and 99th percentiles of the 5–9 commit bucket are its smallest and largest
+observations — one session each — and a plan read off a single observation reports a p99 of
+14.09 h where the predictive says 25.52 h. The wider number is the honest one, and it is
+wider exactly where the evidence is thin, which is the property that makes it worth having.
+
+1 to 99 rather than 5 to 95 for the reason the Daniels fit memo gives: an average-pilot
+cockpit fits nobody, and the F-35 sized its adjustment range 1st to 99th.
+
+**A chain's total is not the sum of its p99s.** Lognormals do not add in closed form, and
+adding the worst cases answers a question nobody asked — every task simultaneously at its
+worst. Sample the chain and read the total's own quantiles. `P0 → E → A` is 5.72 h at the
+median and **31.37 h at the 99th**, where summing three-point estimates said 10.89 h.
+
+**Say what a plan fits in.** At 99% confidence almost nothing fits a day: `P0` alone is 98%
+inside eight hours, `P0 → E` is 94.4%, and the full path is 68.8%. A day of work is one
+small task, and a plan that says otherwise is arithmetic nobody checked.
+
+**Shrink the pessimistic case first.** A p99 is wide because the evidence is thin, so the
+move that buys the most is the smallest one that says which end is real — which is the same
+rule the critical path already states, arriving from the other direction.
+
+### State the modelling choice that dominates the answer
+
+A session's span excludes everything before its first commit, so spans near zero are
+censored rather than short. Flooring them at fifteen minutes is a judgement, and it decides
+the answer: the p99 for a 2–4 commit task reads **38.91 h at a one-minute floor, 10.91 h at
+fifteen, and 7.49 h at thirty**. The floor is stated in `plan.beancount` alongside that
+sensitivity, because a number this load-bearing that is chosen silently is a number nobody
+can argue with. A censored likelihood would replace both the floor and the argument.
+
+
 ## Comments
 
 - Match the comment density of FoundationDB, which is 12 to 14 percent of non-blank lines in
@@ -408,3 +471,21 @@ a commit that only reflows comments costs a review and proves nothing.
 ## How to deploy Godot Engine
 
 - `scons production=yes precision=double debug_symbols=yes accesskit=yes`
+
+## Six sides to the workspace
+
+RFD 0111 gives this stack six words that name a position in the code:
+transport layer, contract, interactor, entity, repository, and data
+source.
+
+"Service" names a deployment set, and ring, port, actor, and
+controller name runtime things.
+
+Six position words make six sides, so the workspace is one hexagon and the numbered directories are its sides.
+
+- 1-transport the input that triggers an interactor
+- 2-contract what a transport layer and an interactor compose against
+- 3-interactor a process that performs actions on entities
+- 4-entities the simulated things, and the actions on them
+- 5-repository an interface that gets, creates, and changes entities
+- 6-datasource an implementation of a repository
