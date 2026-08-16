@@ -498,6 +498,49 @@ def _licence_of(org, name):
 
 
 PAGES_OVERRIDE = None
+LEDGER_OVERRIDE = None
+
+# One 2-4 commit session is te 1.16 h in the table CLAUDE.md derives from git, and it is
+# the smallest unit of real work this organisation does. A month booking less than that to
+# the deliverable did not work on it; 0.06 h -- the reading when this check was written --
+# is a rename sweep brushing a file, not a session.
+MIN_DELIVERY_H = 1.16
+DELIVERY_WINDOW_DAYS = 30
+
+
+def check_deliverable_moved(_mtext, _rtext):
+    """The deliverable MUST take hours every month, or the build says so.
+
+    Every other check here asks whether a document is true. This one asks whether anything
+    was delivered, because those are not the same and the difference is what went wrong:
+    over ninety days 21.2% of measured hours went to documents about the mesh and 7.4% to
+    the mesh, while every gate stayed green throughout. A green gate closes a check, not a
+    deliverable.
+
+    The ledger is read rather than recomputed, so this answers from the file that is
+    committed. bean-check says the file is well formed; this says what is in it. Beancount
+    is an operating-system tool here the way gcc is -- installed, never vendored, never
+    imported -- so a missing bean-check is an unmet precondition and therefore a failure,
+    never a skip.
+    """
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import ledger
+
+    if LEDGER_OVERRIDE is not None:
+        hours, window = LEDGER_OVERRIDE
+    else:
+        if not ledger.LEDGER.exists():
+            return [f"{ledger.LEDGER.name} is missing; nothing counts what was delivered"]
+        r = subprocess.run(["bean-check", str(ledger.LEDGER)], capture_output=True, text=True)
+        if r.returncode != 0:
+            first = ((r.stderr or r.stdout).strip().splitlines() or ["?"])[0]
+            return [f"bean-check rejects the ledger: {first[:120]}"]
+        hours, window = ledger.delivery_hours(DELIVERY_WINDOW_DAYS), DELIVERY_WINDOW_DAYS
+    if hours < MIN_DELIVERY_H:
+        return [f"{hours:.2f} h booked to the deliverable in {window} days, under "
+                f"{MIN_DELIVERY_H} h. Whatever else merged, the thing being built did not move."]
+    return []
+
 
 
 def check_pages_names(mtext, _rtext):
@@ -575,6 +618,7 @@ CHECKS = [
     ("no document names a repository that moved", check_names_resolve, "network"),
     ("every repository we own carries a usable licence", check_licences, "network"),
     ("a project that serves Pages keeps the name its URL contains", check_pages_names, "network"),
+    ("the deliverable moved this month", check_deliverable_moved, "local"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -615,6 +659,10 @@ BREAKAGE = {
     "a project that serves Pages keeps the name its URL contains": (
         "p", {"multiplayer-fabric-manuals":
               "https://v-sekai-multiplayer-fabric.github.io/contract-manuals/"}),
+    # The ledger is generated from git, so no edit here can move an hour into or out of a
+    # window. The control replaces the reading instead, with the exact one that was true
+    # when this check was written: 0.06 h in thirty days.
+    "the deliverable moved this month": ("g", (0.06, 30)),
 }
 
 
@@ -636,11 +684,14 @@ def main():
 
     if self_test:
         print("\nnegative controls (each check must fail on broken input):")
-        global DOC_OVERRIDE, PAGES_OVERRIDE
+        global DOC_OVERRIDE, PAGES_OVERRIDE, LEDGER_OVERRIDE
         for label, fn, _kind in selected:
             spec = BREAKAGE[label]
-            m2, r2, DOC_OVERRIDE, PAGES_OVERRIDE = mtext, rtext, None, None
-            if spec[0] == "p":
+            m2, r2 = mtext, rtext
+            DOC_OVERRIDE = PAGES_OVERRIDE = LEDGER_OVERRIDE = None
+            if spec[0] == "g":
+                LEDGER_OVERRIDE = spec[1]
+            elif spec[0] == "p":
                 PAGES_OVERRIDE = spec[1]
             elif spec[0] == "l":
                 # Asking GitHub cannot be perturbed by editing a file here, so the
@@ -665,6 +716,7 @@ def main():
                 DOC_OVERRIDE = None
                 LICENCE_OVERRIDE = None
                 PAGES_OVERRIDE = None
+                LEDGER_OVERRIDE = None
             if broke:
                 print(f"ok    {label} fails on broken input")
             else:
