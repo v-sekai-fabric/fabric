@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <!-- fabric: the gyre dependency set. Converted from .meta (mateodelnorte/meta),
+       whose per-repo branches rode inside the URL string as a git clone branch flag. -->
+
+  <remote name="v-sekai-multiplayer-fabric" fetch="https://github.com/v-sekai-multiplayer-fabric" />
+  <remote name="v-sekai" fetch="https://github.com/V-Sekai" />
+  <remote name="fire" fetch="https://github.com/fire" />
+  <remote name="taskweft" fetch="https://github.com/taskweft" />
+  <remote name="meshula" fetch="https://github.com/meshula" />
+
+  <!-- No remote or revision here: every project states both, so a project that -->
+  <!-- omits either fails at init instead of inheriting a default nobody chose. -->
+  <default sync-j="16" />
+
+  <project name="entities-godot" remote="v-sekai-multiplayer-fabric" revision="gyre" />
+  <project name="godot-images" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="fabric-godot-assembly" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="service-godot" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="vsekai-godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="service-store" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="foundationdb" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="multiplayer-fabric-manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-asset" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-fanout" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-gateway" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-ingest" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="service-physics" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="interactor-physics" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-shared" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-combat" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-connection-fsm" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-duckdb" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-entity-packet" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-fabric-protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-http3-queue" remote="v-sekai-multiplayer-fabric" revision="master" />
+  <project name="lean-humanoid-rom" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-loot" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-progression" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-rebac" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-spatial-oracle" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="taskweft" remote="taskweft" revision="main" />
+  <project name="flowref" remote="fire" revision="main" />
+  <project name="flowref-decompiler" remote="fire" revision="main" />
+  <project name="V-Sekai.cassie" remote="v-sekai" revision="main" />
+  <project name="cassie" remote="v-sekai" revision="main" />
+  <project name="cassie-data" remote="v-sekai" revision="master" />
+  <project name="idtx-flow" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="datasource-flow" remote="v-sekai-multiplayer-fabric" revision="main-fabric" />
+  <project name="datasource-flow-project" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="xr-grid" remote="v-sekai" revision="main" />
+  <project name="TOOL_model_explorer" remote="v-sekai" revision="main" />
+  <project name="fabric-wt-harness" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="wallpaper-parsec" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="LabRCSF" remote="meshula" revision="dev" />
+</manifest>

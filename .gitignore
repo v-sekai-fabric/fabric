@@ -1,11 +1,12 @@
-# Child repos, cloned in place by `meta git clone`. Each keeps its own history in its own
-# remote; this repo tracks only the `.meta` manifest and the conventions beside it.
+# Child repos, cloned by `repo sync`. Each keeps its own history in its own remote; this repo
+# tracks only the `default.xml` manifest and the conventions beside it.
 #
-# Every entry in `.meta` must be matched here, or its clone appears as untracked and the next
-# person to run `git status` is invited to commit somebody else's repository into this one.
-# Checked with:
+# `repo init` puts the manifest in `.repo/manifests` and the children beside it, so a workspace
+# rooted on this checkout is the case these patterns are for. Every entry in `default.xml` must
+# be matched here, or its clone appears as untracked and the next person to run `git status` is
+# invited to commit somebody else's repository into this one. Checked with:
 #
-#   python -c "import json,subprocess; [print('MISSING',n) for n in json.load(open('.meta'))['projects'] if subprocess.run(['git','check-ignore','-q',n+'/']).returncode]"
+#   python3 -c "import xml.etree.ElementTree as E,subprocess; [print('MISSING',d) for d in (p.get('path') or p.get('name') for p in E.parse('default.xml').getroot().iter('project')) if subprocess.run(['git','check-ignore','-q',d+'/']).returncode]"
 #
 # The trailing slash is the whole check. Every pattern below ends in one, so `check-ignore`
 # matches only a path it can see is a directory. Without it the command reports MISSING for
@@ -46,6 +47,7 @@
 *.log
 
 # Scratch that is neither a child repo nor a build artefact.
+.repo/
 node_modules/
 /wallpaper-parsec/
 /.playwright-mcp/

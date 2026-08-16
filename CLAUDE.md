@@ -190,6 +190,41 @@ And when the curve was replaced, its contiguity gate had to be deleted rather th
 fails it by design. A gate that outlives what it was written for is a test that passes only for
 the thing you removed, which is where this started.
 
+## Documentation is antifragile
+
+The rules above are about code. Prose needs them more, because prose has no compiler and no
+test suite, and a README that is wrong looks exactly like a README that is right.
+
+Robust documentation survives being wrong. Antifragile documentation gets **stronger** every
+time it is wrong, because each error is converted into a check before the fix ships.
+
+- **One source of truth per fact, and it is not the prose.** `default.xml` says what the fleet
+  is; the README describes it. Where the two disagree the manifest wins and the prose is the
+  bug. `misc/scripts/check_docs.py` derives every documented count, name, and branch from the manifest.
+- **Every claim is executable or it is decoration.** Counts, tables, branch names, and sizes
+  are checked by a command that exits non-zero. A claim no command can falsify does not belong
+  in the document. This is the `Checks` rule above, applied to sentences.
+- **A found error becomes a check, not just an edit.** Correcting the text is half the fix; the
+  other half is the assertion that would have caught it, in the same change. That is the whole
+  mechanism -- stress adds checks, so the harness is strongest exactly where documentation has
+  failed before.
+- **The doc gate ships with a negative control.** `check_docs.py --self-test` breaks each claim
+  on purpose and requires the matching check to fail. A gate never seen failing is a gate
+  nobody has evidence works, and that applies to a README gate as much as to a build gate.
+- **Never hedge to survive.** "Roughly", "should be", and "approximately" on a knowable number
+  are ways to make a claim unfalsifiable so the gate cannot fail it. State the number and let
+  the gate defend it; where a value is genuinely a range, state the range and check the bound.
+- **Prefer generated to maintained.** A table a script can emit from the artefact should be
+  emitted, not typed.
+
+This was learned converting this manifest off `meta`. Three defects, each invisible to review:
+the per-repo branches existed only as a `git clone` flag smuggled inside a URL string, so a
+field nobody could see carried `gyre`, `main-fabric`, `dev`, and two `master`s; the first
+`default.xml` would not parse at all, because a flag quoted in an XML comment contains `--`;
+and the first doc gate silently matched nothing, because the claim it looked for had wrapped
+across two lines. The first was found by conversion, the second by running the tool, the third
+by a control that reported its own pattern had gone dead. Only the third one found itself.
+
 ## Taking inventory
 
 A workspace of forty-two repositories loses work on disk, not in review. Before changing
