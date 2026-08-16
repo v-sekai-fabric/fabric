@@ -82,6 +82,18 @@ def check_revision_table(mtext, rtext):
     actual = {(p["name"], p["revision"]) for p in projects if p["revision"] != modal}
     bad += [f"README documents {t}, not an exception in the manifest" for t in sorted(rows - actual)]
     bad += [f"manifest has exception {t}, README omits it" for t in sorted(actual - rows)]
+
+    # The sentence introducing the table counts its rows in words, and adding a row
+    # does not update it. That went stale once already: the table grew to six while
+    # the prose still said five, and every other check here passed, because they all
+    # compare the rows and none of them reads the number.
+    words = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+             "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+    n = re.search(r"The (\w+) that do not", flat(rtext))
+    if not n:
+        bad.append("README: no 'The <n> that do not' sentence to check")
+    elif words.get(n.group(1).lower()) != len(actual):
+        bad.append(f"README says '{n.group(1)}' exceptions, the manifest has {len(actual)}")
     return bad
 
 
@@ -401,8 +413,10 @@ CHECKS = [
 # nothing -- see the Checks section of CLAUDE.md.
 BREAKAGE = {
     "every path the README names exists": ("r", "misc/scripts/check_docs.py", "misc/scripts/nope_docs.py"),
-    "README counts match the manifest": ("r", "43 projects across 5", "42 projects across 5"),
-    "README revision exceptions match the manifest": ("m", 'revision="gyre"', 'revision="main"'),
+    "README counts match the manifest": ("r", "45 projects across 5", "44 projects across 5"),
+    # Breaking the count word rather than a row: the row comparison would catch a
+    # changed revision anyway, and the word is the half that had no control at all.
+    "README revision exceptions match the manifest": ("r", "The six that do not", "The five that do not"),
     "every project states remote and revision": ("m", ' remote="meshula" revision="dev"', ""),
     "<default> sets sync-j so fetches are not serial": ("m", '<default sync-j="16" />', "<default />"),
     "every manifest revision exists on its remote": ("m", 'revision="dev"', 'revision="no-such-xyz"'),
