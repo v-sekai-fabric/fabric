@@ -21,21 +21,20 @@
        The numbers carry the ring order, which the alphabet loses. A listing
        then prints the driving side first, the inside in the middle, and the
        driven side last, so the rule that all dependencies point inward reads
-       as "every side points at 3 and 4". Sides 2 and 5 hold no git repository
-       in this dependency set yet.
+       as "every side points at 3 and 4". Side 5 holds no git repository in
+       this dependency set yet.
 
-       Four directories hold what the ring does not:
+       Every project sits on a side. There are no other directories: service/,
+       lean/, engine/, authoring/, cassie/, vendor/ and doc/ all named how a
+       thing was built or where it came from rather than what it does, which is
+       the drift the six words exist to stop. A directory that names no position
+       collects whatever nobody classified, and it grew to eight of them.
 
-         service/  the sets of interactors that share a ring
-         lean/     the Lean workspaces that RFD 0111 does not classify
-         vendor/   the git repositories of another organisation
-         doc/      the manuals
-
-       A git repository that RFD 0111 gives no type stays at the root. The
-       convention applies where there is a word for the thing, and nowhere else.
-
-       `path` decides the checkout directory alone. Every name below is the
-       name on GitHub and this file changes none of them. -->
+       `path` decides the checkout directory and this repository chooses it.
+       `name` is the name on GitHub, and for four projects below another
+       organisation chose it, so those four are the only ones whose path and
+       name do not rebuild each other. check_docs.py lists them with the
+       evidence, and every other project was renamed to match its side. -->
 
   <remote name="v-sekai-multiplayer-fabric" fetch="https://github.com/v-sekai-multiplayer-fabric" />
   <remote name="v-sekai" fetch="https://github.com/V-Sekai" />
@@ -53,16 +52,42 @@
        edit to a gate or to memory has nowhere in the checkout to live. -->
   <project name="fabric" path="." remote="v-sekai-multiplayer-fabric" revision="main" />
 
-  <!-- 1: the transport layers -->
+  <!-- 1: the transport layers. Each terminates a client protocol and triggers an
+       interactor. The two MCP servers are transport layers for an authoring client
+       rather than a player one, which changes the protocol and nothing else. -->
   <project name="transport-asset" path="1-transport/asset" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-fanout" path="1-transport/fanout" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-gateway" path="1-transport/gateway" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-ingest" path="1-transport/ingest" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-client" path="1-transport/client" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-godot-mcp" path="1-transport/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-blender-mcp" path="1-transport/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-xr-grid" path="1-transport/xr-grid" remote="v-sekai" revision="main" />
 
-  <!-- 3: the interactors -->
+  <!-- 2: the contracts. Each is a model that both sides compose against, so the Lean
+       workspaces that state a wire format, a lifecycle or a rule sit here rather than
+       in a directory named after the language they happen to be written in. -->
+  <project name="contract-wt" path="2-contract/wt" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="contract-entity-packet" path="2-contract/entity-packet" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="contract-connection-fsm" path="2-contract/connection-fsm" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="contract-http3-queue" path="2-contract/http3-queue" remote="v-sekai-multiplayer-fabric" revision="master" />
+  <project name="contract-protocol" path="2-contract/protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="contract-interest-mgmt" path="2-contract/interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="contract-patch-verify" path="2-contract/patch-verify" remote="fire" revision="main" />
+  <project name="contract-manuals" path="2-contract/manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- 3: the interactors. Each performs actions on entities. -->
   <project name="interactor-physics" path="3-interactor/physics" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="interactor-ward" path="3-interactor/ward" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="interactor-spatial-oracle" path="3-interactor/spatial-oracle" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="interactor-taskweft" path="3-interactor/taskweft" remote="taskweft" revision="main" />
+  <project name="interactor-triangulation" path="3-interactor/triangulation" remote="fire" revision="legacy" />
+  <project name="interactor-sketch" path="3-interactor/sketch" remote="v-sekai" revision="main" />
+  <!-- The academic CASSIE project's own Unity application. Its name is the paper's. -->
+  <project name="cassie" path="3-interactor/cassie" remote="v-sekai" revision="main" />
 
-  <!-- 4: the entities -->
+  <!-- 4: the entities, and the actions on them. The engine images and the assembly
+       build the runtime the entities are simulated in, so they sit beside them. -->
   <project name="entities-gyre" path="4-entities/gyre" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="entities-godot" path="4-entities/godot" remote="v-sekai-multiplayer-fabric" revision="gyre" />
   <project name="entities-lean-combat" path="4-entities/lean-combat" remote="v-sekai-multiplayer-fabric" revision="main" />
@@ -70,55 +95,27 @@
   <project name="entities-lean-progression" path="4-entities/lean-progression" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="entities-lean-rebac" path="4-entities/lean-rebac" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="entities-lean-shared" path="4-entities/lean-shared" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-humanoid-rom" path="4-entities/humanoid-rom" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-images" path="4-entities/images" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-assembly" path="4-entities/assembly" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-parsec" path="4-entities/parsec" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-model-explorer" path="4-entities/model-explorer" remote="v-sekai" revision="main" />
+  <!-- Nick Porcino's reference skeleton. We have no admin on it, so we cannot rename it. -->
+  <project name="LabRCSF" path="4-entities/LabRCSF" remote="meshula" revision="dev" />
 
-  <!-- 6: the data sources -->
+  <!-- 5: the repositories. This dependency set holds none yet. -->
+
+  <!-- 6: the data sources. Each implements a repository: durable state, a file format,
+       or a reader that gets facts out of something that was not built to be queried. -->
+  <project name="datasource-queen" path="6-datasource/queen" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="datasource-flow" path="6-datasource/flow" remote="v-sekai-multiplayer-fabric" revision="main-fabric" />
   <project name="datasource-flow-project" path="6-datasource/flow-project" remote="v-sekai-multiplayer-fabric" revision="main" />
-
-  <!-- The meshing pen: draw a closed curve in VR, get a mesh. cassie-triangulation
-       is the native plugin; cassie-patch-verify is the independent Lean oracle
-       that certifies what it produced. -->
-  <project name="cassie-triangulation" path="cassie/triangulation" remote="fire" revision="legacy" />
-  <project name="cassie-patch-verify" path="cassie/patch-verify" remote="fire" revision="main" />
-
-  <!-- The services: the sets that share a ring -->
-  <project name="service-godot" path="service/godot" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="service-physics" path="service/physics" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="service-store" path="service/store" remote="v-sekai-multiplayer-fabric" revision="main" />
-
-  <!-- The Lean workspaces RFD 0111 does not classify -->
-  <project name="lean-connection-fsm" path="lean/connection-fsm" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-duckdb" path="lean/duckdb" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-entity-packet" path="lean/entity-packet" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-fabric-protocol" path="lean/fabric-protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-http3-queue" path="lean/http3-queue" remote="v-sekai-multiplayer-fabric" revision="master" />
-  <project name="lean-humanoid-rom" path="lean/humanoid-rom" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-interest-mgmt" path="lean/interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-spatial-oracle" path="lean/spatial-oracle" remote="v-sekai-multiplayer-fabric" revision="main" />
-
-  <!-- The manuals -->
-  <project name="multiplayer-fabric-manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
-
-  <!-- Another organisation owns these names, so the checkout places them
-       where the name cannot be changed. -->
-  <project name="taskweft" path="vendor/taskweft" remote="taskweft" revision="main" />
-  <project name="flowref" path="vendor/flowref" remote="fire" revision="main" />
-  <project name="flowref-decompiler" path="vendor/flowref-decompiler" remote="fire" revision="main" />
-  <project name="V-Sekai.cassie" path="vendor/V-Sekai.cassie" remote="v-sekai" revision="main" />
-  <project name="cassie" path="vendor/cassie" remote="v-sekai" revision="main" />
-  <project name="cassie-data" path="vendor/cassie-data" remote="v-sekai" revision="master" />
-  <project name="xr-grid" path="vendor/xr-grid" remote="v-sekai" revision="main" />
-  <project name="TOOL_model_explorer" path="vendor/TOOL_model_explorer" remote="v-sekai" revision="main" />
-  <project name="LabRCSF" path="vendor/LabRCSF" remote="meshula" revision="dev" />
-
-  <!-- RFD 0111 gives these no type, so they stay at the root until an RFD
-       decides one. A guess here would state a type that is not theirs. -->
-  <project name="engine-images" path="engine/images" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="engine-assembly" path="engine/assembly" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="contract-wt" path="2-contract/wt" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="authoring-godot-mcp" path="authoring/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="authoring-blender-mcp" path="authoring/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="datasource-foundationdb" path="6-datasource/foundationdb" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="idtx-flow" path="vendor/idtx-flow" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="wallpaper-parsec" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="datasource-duckdb" path="6-datasource/duckdb" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="datasource-flowref" path="6-datasource/flowref" remote="fire" revision="main" />
+  <project name="datasource-flowref-decompiler" path="6-datasource/flowref-decompiler" remote="fire" revision="main" />
+  <!-- Upstream's own name, mirrored: the CASSIE paper's recorded sketch dataset, and -->
+  <!-- the Immersive Data Center Management flow tooling. -->
+  <project name="cassie-data" path="6-datasource/cassie-data" remote="v-sekai" revision="master" />
+  <project name="idtx-flow" path="6-datasource/idtx-flow" remote="v-sekai-multiplayer-fabric" revision="main" />
 </manifest>

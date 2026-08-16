@@ -13,7 +13,7 @@ substring match. Vectors are byte-identical to `tw_hrr.hpp` and to the planner's
 holographic.py, which is what lets the same rows be read from C++ or Python.
 
 The database is an ordinary SQLite file. It opens through the `weft_fdb` VFS when
-one is registered -- the same VFS `service-store` opens `queen` with -- and as a
+one is registered -- the same VFS `datasource-queen` opens `queen` with -- and as a
 plain file when none is, so the rows are the same either way.
 
   memory.py build                      jsonl -> sqlite, with the vectors

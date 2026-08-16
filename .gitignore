@@ -15,22 +15,15 @@
 #
 # `default.xml` gives each child a `path`, so a child lands in the directory for its side of
 # the hexagon and one entry covers that whole side. A child added to a side later is ignored
-# without an edit here. `wallpaper-parsec` is named on its own because it is the one child no
-# word here fits, and it stays at the root until one does.
+# without an edit here. Six entries is the whole list, because every project sits on a side;
+# the eight directories that used to be named here one by one named how a thing was built or
+# where it came from, and each was a place for whatever nobody had classified.
 /1-transport/
 /2-contract/
 /3-interactor/
 /4-entities/
 /5-repository/
 /6-datasource/
-/service/
-/lean/
-/vendor/
-/multiplayer-fabric-manuals/
-/authoring/
-/cassie/
-/engine/
-/wallpaper-parsec/
 
 # Build and run output from work done at the workspace root rather than inside a child. Logs
 # from a long engine build or a test server land here and are worth keeping on disk while a
@@ -42,5 +35,5 @@
 node_modules/
 /.playwright-mcp/
 
-# Built from memory/*.parquet by misc/scripts/memory.py; the relations are the source.
+# Built from memory/*.jsonl by misc/scripts/memory.py; the relations are the source.
 /memory/fabric.sqlite3

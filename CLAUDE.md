@@ -18,7 +18,7 @@ change on its own, so two checkouts made a month apart can differ with nothing h
 Writing the obvious ones is the whole point. If only the unusual entries carry a branch, a
 missing one means "the default, probably" and a present one means "look closer", and neither is
 checkable. Two of the forty-two are already not what a reader would guess —
-`entities-godot` tracks `gyre` while its own default is `master`, and `lean-http3-queue`
+`entities-godot` tracks `gyre` while its own default is `master`, and `contract-http3-queue`
 defaults to `master` unlike every other `lean-*`. Stating all of them makes those two ordinary
 lines rather than discoveries, and makes the next one visible in a diff.
 
@@ -69,7 +69,7 @@ habit of the `lean-*` hexagons rather than a rule. It is a rule, and the reason 
 manifest's reason is: a value left out is not absent, it is recorded somewhere else. Provenance
 stated only in prose is stated once, in whichever paragraph happened to need it, and a reader
 asking "what is this made of" has to read the whole `README.md` and trust that nothing was
-dropped. `service-physics` is the case that makes it plain — a clone of one repository,
+dropped. `interactor-ward` is the case that makes it plain — a clone of one repository,
 vendoring a second and a third, implementing somebody else's published design, against numbers
 proved in four Lean hexagons. None of that is visible in a dependency file, because there is no
 dependency file that could hold a journal article.
@@ -108,7 +108,7 @@ instead of it.
 
 ### Driving Godot locally
 
-`authoring-godot-mcp` is the local harness for anything Godot, and it is available here rather
+`transport-godot-mcp` is the local harness for anything Godot, and it is available here rather
 than being something to build each time. Vendor it into a project as
 `addons/vsekai_godot_mcp` from the repository's `addon-root` branch — Godot only scans
 `res://addons/*/plugin.cfg`, so the whole repository subtreed puts it one level too deep and

@@ -22,9 +22,9 @@ at `repo init` rather than inheriting a default. Most projects track `main`. The
 | project | revision |
 |---|---|
 | `entities-godot` | `gyre` |
-| `cassie-triangulation` | `legacy` |
+| `interactor-triangulation` | `legacy` |
 | `datasource-flow` | `main-fabric` |
-| `lean-http3-queue` | `master` |
+| `contract-http3-queue` | `master` |
 | `cassie-data` | `master` |
 | `LabRCSF` | `dev` |
 
