@@ -510,15 +510,19 @@ DELIVERY_WINDOW_DAYS = 30
 
 
 def check_plan_and_spend_are_separate(_mtext, _rtext):
-    """A planned hour and a spent hour MUST never share an account.
+    """A planned hour and a spent hour MUST never share an account or a unit.
 
     The plan estimates work nobody has done, so it books liabilities: an obligation
     outstanding. The ledger books expenses: hours that went somewhere. Put an estimate in
     an expense account and the plan reports itself as progress, which is the failure this
     whole ledger exists to stop, arriving from the inside.
 
-    So the check is structural rather than a matter of care -- the two files are read and
-    their account names intersected, and any overlap fails.
+    The unit does most of this work without help: planned hours are PLANNED-HOURS and spent
+    hours are HOURS, and beancount will not balance across commodities, so netting one
+    against the other fails at parse time with exit 1. This check is the belt to that
+    braces -- it reads both files, intersects their account names and their commodities, and
+    fails on any overlap, because the day somebody unifies the units to tidy them up is the
+    day the tool stops refusing.
     """
     if SEPARATION_OVERRIDE is not None:
         # The check reads two files this repository generates, so no manifest edit can
@@ -537,10 +541,10 @@ def check_plan_and_spend_are_separate(_mtext, _rtext):
                     out.add(s.replace("open ", "").split()[0])
         return out
 
-    for f in (ledger.LEDGER, ledger.PLAN):
+    for f in (ledger.SPENT, ledger.PLANNED):
         if not f.exists():
             return [f"{f.name} is missing"]
-    shared = accounts(ledger.LEDGER) & accounts(ledger.PLAN)
+    shared = accounts(ledger.SPENT) & accounts(ledger.PLANNED)
     if shared:
         return [f"{a} carries both planned and spent hours; an estimate reads as progress"
                 for a in sorted(shared)]
@@ -568,9 +572,9 @@ def check_deliverable_moved(_mtext, _rtext):
     if LEDGER_OVERRIDE is not None:
         hours, window = LEDGER_OVERRIDE
     else:
-        if not ledger.LEDGER.exists():
-            return [f"{ledger.LEDGER.name} is missing; nothing counts what was delivered"]
-        r = subprocess.run(["bean-check", str(ledger.LEDGER)], capture_output=True, text=True)
+        if not ledger.SPENT.exists():
+            return [f"{ledger.SPENT.name} is missing; nothing counts what was delivered"]
+        r = subprocess.run(["bean-check", str(ledger.SPENT)], capture_output=True, text=True)
         if r.returncode != 0:
             first = ((r.stderr or r.stdout).strip().splitlines() or ["?"])[0]
             return [f"bean-check rejects the ledger: {first[:120]}"]

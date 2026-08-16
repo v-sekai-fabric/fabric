@@ -401,14 +401,24 @@ has a pessimistic case that includes "and then throw it away".
 Ordering work says what to do next. This says whether it happened, which is a different
 question and the one that was never asked.
 
-- The hours are **booked**, in `ledger/delivery.beancount`, generated from git by
+- The hours are **booked**, in `ledger/spent.beancount`, generated from git by
   `misc/scripts/ledger.py` and never typed. A session is a run of commits with no gap over
   four hours, and its cost is the span from its first commit to its last.
 - **A month that books less than one small session to the deliverable fails the build.**
   `check_deliverable_moved` is that gate, at 1.16 h over thirty days.
-- The **plan lives in the ledger too**, in `ledger/plan.beancount`: a task is a
+- The **plan lives in the ledger too**, in `ledger/planned.beancount`: a task is a
   transaction, its three points are metadata, and `ledger.py path` computes the critical
   path from the dependencies rather than from a picture somebody drew.
+- **Hypothetical and spent never mix, and the tool is what stops them.** Planned work is
+  a liability in `PLANNED-HOURS`; spent work is an expense in `HOURS`. Beancount will not
+  balance across commodities, so netting one against the other fails at parse time with
+  exit 1 — the separation is enforced by the format rather than asked for in prose.
+  `check_plan_and_spend_are_separate` intersects accounts and units as belt to that braces,
+  because the day somebody unifies the units to tidy them up is the day the tool stops
+  refusing.
+- **The whole history is booked, not a trailing year.** A ledger that starts a year ago can
+  say what a thing cost recently and not what it has cost. 479.8 h since 2020, of which
+  42.70 h is the mesh.
 - Beancount is an **operating-system tool, like gcc**. `brew install beancount`. Never
   vendored and never imported — it is GPL-2.0, which the licence policy here files as
   restricted, so keeping it outside the tree is a licence decision as well as a dependency
@@ -454,7 +464,7 @@ rule the critical path already states, arriving from the other direction.
 A session's span excludes everything before its first commit, so spans near zero are
 censored rather than short. Flooring them at fifteen minutes is a judgement, and it decides
 the answer: the p99 for a 2–4 commit task reads **38.91 h at a one-minute floor, 10.91 h at
-fifteen, and 7.49 h at thirty**. The floor is stated in `plan.beancount` alongside that
+fifteen, and 7.49 h at thirty**. The floor is stated in `planned.beancount` alongside that
 sensitivity, because a number this load-bearing that is chosen silently is a number nobody
 can argue with. A censored likelihood would replace both the floor and the argument.
 

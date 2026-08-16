@@ -1,5 +1,11 @@
 ;; The plan. HYPOTHETICAL. Nothing here was spent.
 ;;
+;; The unit is PLANNED-HOURS, not HOURS, and that is the split doing real work
+;; rather than a label asking to be believed. Beancount will not balance across
+;; commodities, so a planned hour cannot be netted against a spent one, summed
+;; with one, or quietly become one: the tool refuses it at parse time. The account
+;; separation and check_docs.py's gate sit on top of that as belt and braces.
+;;
 ;; Every amount below is an estimate of work nobody has done, so it is booked as a
 ;; liability -- an obligation outstanding -- and never as an expense. Expenses are
 ;; hours that went somewhere, and they live in delivery.beancount, which git
@@ -44,10 +50,10 @@
 ;; the plan cannot quietly become a claim about what happened.
 
 option "title" "fabric-plan: HYPOTHETICAL, the critical path to a mesh a player can trust"
-option "operating_currency" "HOURS"
+option "operating_currency" "PLANNED-HOURS"
 
-2026-08-16 open Liabilities:Planned:Mesh  HOURS
-2026-08-16 open Equity:Plan               HOURS
+2026-08-16 open Liabilities:Planned:Mesh  PLANNED-HOURS
+2026-08-16 open Equity:Plan               PLANNED-HOURS
 
 ;; The last task. Not estimated: it is the condition that closes the thread, and a
 ;; number against it would be a guess about work that has not been scoped.
@@ -84,7 +90,7 @@ option "operating_currency" "HOURS"
 ;; cluster in it, and the one this deliverable serves. The same memo applies there:
 ;; those six did not name a feature, they named the adjustment mechanism, which is
 ;; what lets holly have fishing and dragos have his horde without either choosing.
-2026-08-16 custom "budget" Liabilities:Planned:Mesh "weekly" 40.00 HOURS
+2026-08-16 custom "budget" Liabilities:Planned:Mesh "weekly" 40.00 PLANNED-HOURS
 
 2026-08-16 note Liabilities:Planned:Mesh "Scope slides, budget does not. Stop at whichever notch of P0-E-A-B-G the 40 h runs out on; all five fit at the median and only the first three at the 99th, and which holds is not known until P0 reports."
 
@@ -97,7 +103,7 @@ option "operating_currency" "HOURS"
   likely: 0.81
   pessimistic: 10.91
   hypothetical: TRUE
-  Liabilities:Planned:Mesh    2.37 HOURS
+  Liabilities:Planned:Mesh    2.37 PLANNED-HOURS
   Equity:Plan
 
 ;; Accomplished. Hours for these are in delivery.beancount, booked from git.
@@ -109,5 +115,5 @@ option "operating_currency" "HOURS"
   likely: 2.77
   pessimistic: 25.52
   hypothetical: TRUE
-  Liabilities:Planned:Mesh    6.15 HOURS
+  Liabilities:Planned:Mesh    6.15 PLANNED-HOURS
   Equity:Plan
