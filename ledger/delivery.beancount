@@ -1133,13 +1133,8 @@ option "operating_currency" "HOURS"
   Expenses:Other                 2.94 HOURS
   Income:Sessions
 
-<<<<<<< HEAD
-2026-08-16 * "." "Book the hours, and fail the build when the deliverable does not move"
-  Expenses:Fabric                8.07 HOURS
-=======
-2026-08-16 * "." "Store the memory relations as OpenUSD layers, gated by system usdcat (#28)"
-  Expenses:Fabric                7.11 HOURS
->>>>>>> v-sekai-multiplayer-fabric/main
+2026-08-16 * "." "Merge main"
+  Expenses:Fabric                8.12 HOURS
   Income:Sessions
 
 2026-08-16 * "1-transport/asset" "Use the words RFD 0111 decided, and the names these repositories answer to (#2)"
