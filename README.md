@@ -1,70 +1,24 @@
 # fabric
 
-A [repo](https://gerrit.googlesource.com/git-repo) manifest that groups the gyre
-dependencies, so one command checks them all out and one command runs git across all of
-them. 42 projects across 5 GitHub orgs.
+A [repo](https://gerrit.googlesource.com/git-repo) manifest for the gyre dependencies: 42 projects across 5 GitHub orgs, from one command.
 
 ## Setup
 
 ```sh
-brew install repo                 # or: curl the launcher into ~/.local/bin
-
+brew install repo
 mkdir fabric-ws && cd fabric-ws
 repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric
-repo sync -j8                     # clone every project named in default.xml
+repo sync -j8
 ```
 
-`repo init` checks this repo out into `.repo/manifests` and places the children in the
-directories `default.xml` gives them. Nothing is vendored here.
-
-## Layout
-
-RFD 0111 gives this stack six words that name a position in the code, so the workspace is one
-hexagon and the numbered directories are its sides:
-
-```
-1-transport/    the input that triggers an interactor
-2-contract/     what a transport layer and an interactor compose against
-3-interactor/   a process that performs actions on entities
-4-entities/     the simulated things, and the actions on them
-5-repository/   an interface that gets, creates, and changes entities
-6-datasource/   an implementation of a repository
-service/        the sets of interactors that share a ring
-lean/           the Lean workspaces RFD 0111 does not classify
-vendor/         the git repositories of another organisation
-doc/            the manuals
-```
-
-The numbers carry the ring order, which the alphabet loses. A listing prints the driving side
-first, the inside in the middle, and the driven side last, so the rule that all dependencies
-point inward reads as "every side points at 3 and 4". Sides 2 and 5 hold no project in this
-dependency set yet.
-
-Each project's `path` decides its directory and no name changes: `transport-gateway` on GitHub
-is `1-transport/gateway` on disk. A project RFD 0111 gives no type stays at the workspace root,
-because a guess here would state a type that is not the project's.
-
-## Use
-
-```sh
-repo sync -j8                     # bring every child up to its manifest revision
-repo status                       # status across all of them
-repo forall -c 'git log -1 --oneline'   # run any command in each
-repo start <branch> <project>     # start work in a child (sync leaves detached HEADs)
-```
-
-`repo sync` parks each project on a detached HEAD at its manifest revision, so `repo start`
-before editing. `repo sync -j8` fetches eight projects at a time; add `--partial-clone` at
-init for large histories.
+`default.xml` gives each project a `path`, so the workspace is one hexagon and the
+numbered directories are its sides; that file's opening comment names all six. `repo
+sync` leaves detached HEADs, so `repo start <branch> <project>` before editing.
 
 ## Revisions
 
-Every project states its own `remote` and `revision`. The `<default>` element carries neither,
-only `sync-j`, so a project that omits either fails at `repo init` rather than inheriting a
-default nobody chose — verified: removing both attributes from one project gives
-`fatal: no remote for project <name>`.
-
-Most projects track `main`. The five that do not:
+Every project states its own `remote` and `revision`, so one that omits either fails
+at `repo init` rather than inheriting a default. Most projects track `main`. The five that do not:
 
 | project | revision |
 |---|---|
@@ -74,45 +28,12 @@ Most projects track `main`. The five that do not:
 | `cassie-data` | `master` |
 | `LabRCSF` | `dev` |
 
-Under `meta` these branches had no field to live in — they rode inside the URL string as a
-`git clone` branch flag, which `meta` passed through to the shell. `default.xml` gives each
-one a `revision` attribute, so the branch is data rather than a smuggled argument.
-
 ## Checks
 
 ```sh
-python3 misc/scripts/check_docs.py              # every README claim, against default.xml and the remotes
+python3 misc/scripts/check_docs.py              # claims, against default.xml and the remotes
 python3 misc/scripts/check_docs.py --self-test  # plus: break each claim, require its check to fail
+prek run --all-files                            # the offline subset, wired as a hook
 ```
 
-Seven checks: every path the README names exists (here, or in the repo it is attributed to),
-the counts, the revision exceptions table, the explicit remote/revision invariant, that
-`<default>` sets `sync-j` (without it repo fetches serially), that all 42 revisions exist on
-their remotes, and that every project directory is gitignored. Each has a negative control.
-
-The hooks are wired with [prek](https://github.com/j178/prek):
-
-```sh
-prek install                      # pre-commit and pre-push
-prek run --all-files              # the offline subset, now
-prek run --hook-stage pre-push --all-files
-```
-
-Commit stage runs the offline checks so it stays fast; the network claims and the negative
-controls run at pre-push, before anything leaves the machine. `--local-only` prints what it
-deferred and where that runs, because a silent skip reads exactly like a pass.
-`CLAUDE.md` explains why documentation is held to this.
-
-## Why not `meta`
-
-[mateodelnorte/meta](https://github.com/mateodelnorte/meta) is unmaintained: last non-bot
-commit to its default branch 2021-06-08, last npm release 2022-06-19. Two failures cost real
-time before this conversion:
-
-- `meta git clone` cannot find its own `meta-git` plugin when both are installed globally. It
-  searches `node_modules/.bin` across cwd-ancestors plus npm's global prefix, never `PATH`.
-- That failure, and a wrong-subcommand usage error, both **exit 0**. A silent skip reads
-  exactly like a pass.
-
-`repo` is maintained by 15 organisations over the last 24 months and is structurally load
-bearing for AOSP, which is a sturdier bus factor than a single volunteer maintainer.
+Eight checks, each with a negative control. `CLAUDE.md` says why.

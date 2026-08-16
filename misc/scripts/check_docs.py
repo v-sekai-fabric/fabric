@@ -131,6 +131,64 @@ def _ls_remote(p):
     return None if out.returncode != 0 else out.stdout.strip()
 
 
+README_MAX = 40
+
+# A mirror's README is upstream's. Editing it forks a document this project does not
+# own, so the limit does not reach one. Each entry states the evidence rather than an
+# opinion: two carry GitHub's fork flag, and the third carries upstream's own README.
+MIRRORS = {
+    # This project owns the Windows builds here and none of the code, so the README
+    # is upstream's to write. GitHub carries the fork flag.
+    "foundationdb": "apple/foundationdb",
+    "idtx-flow": "Immersive-Data-Center-Management/idtx-flow",
+    # No fork flag, and the README is still upstream's: it opens "# Godot Engine" and
+    # links godotengine.org nineteen times.
+    "entities-godot": "godotengine/godot",
+}
+OUR_REMOTE = "v-sekai-multiplayer-fabric"
+
+
+def _workspace_root():
+    """Where the children sit.
+
+    `repo init` puts this repository in `.repo/manifests` and the children two levels
+    above it. A plain clone has them beside it. Both layouts are real, so this asks
+    which one it is in rather than assuming.
+    """
+    if ROOT.name == "manifests" and ROOT.parent.name == ".repo":
+        return ROOT.parent.parent
+    return ROOT
+
+
+def check_readme_length(mtext, rtext):
+    """Every README this project is the primary source for stays under 40 lines.
+
+    A README that grows past a screen stops being read, and the part nobody reads is
+    the part that goes stale without anybody noticing. The limit applies to the git
+    repositories on this project's own remote, and skips a mirror, whose README
+    belongs to its upstream.
+
+    A child that is not cloned is skipped rather than reported. This check therefore
+    holds where it runs, which is every workspace that has the child on disk.
+    """
+    _, _, projects = parse_manifest(mtext)
+    bad = []
+    n = len(rtext.splitlines())
+    if n >= README_MAX:
+        bad.append(f"README.md is {n} lines, limit {README_MAX - 1}")
+    ws = _workspace_root()
+    for p in projects:
+        if p["remote"] != OUR_REMOTE or p["name"] in MIRRORS:
+            continue
+        rp = ws / p["path"] / "README.md"
+        if not rp.exists():
+            continue
+        n = len(rp.read_text(encoding="utf-8", errors="replace").splitlines())
+        if n >= README_MAX:
+            bad.append(f"{p['path']}/README.md is {n} lines, limit {README_MAX - 1}")
+    return bad
+
+
 def check_gitignore_covers_projects(mtext, _rtext):
     """Every child dir must be ignored, or a clone shows up as untracked in this repo.
 
@@ -216,6 +274,7 @@ CHECKS = [
     ("<default> sets sync-j so fetches are not serial", check_sync_j, "local"),
     ("every manifest revision exists on its remote", check_revisions_exist, "network"),
     ("every project directory is gitignored", check_gitignore_covers_projects, "local"),
+    ("every README this project owns is under 40 lines", check_readme_length, "local"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -231,6 +290,9 @@ BREAKAGE = {
     # out of an ignored directory. Editing the name instead leaves `path` ignored and the
     # check passes, which makes the control certify nothing.
     "every project directory is gitignored": ("m", 'path="vendor/LabRCSF"', 'path="not-ignored-xyz"'),
+    # Padding the README past the limit is the failure this gate exists to catch, and
+    # it exercises the same line count the real check reads.
+    "every README this project owns is under 40 lines": ("r", "## Checks", "## Checks" + "\n" * 45),
 }
 
 

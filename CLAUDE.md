@@ -225,6 +225,36 @@ and the first doc gate silently matched nothing, because the claim it looked for
 across two lines. The first was found by conversion, the second by running the tool, the third
 by a control that reported its own pattern had gone dead. Only the third one found itself.
 
+### A README is under forty lines
+
+- Every `README.md` in a repository this project is the **primary source** for MUST be
+  under 40 lines. `misc/scripts/check_docs.py` gates it, offline, at commit stage.
+- A **mirror** is exempt. Its README belongs to its upstream, and editing it forks a
+  document this project does not own. `MIRRORS` in that script names each one and the
+  evidence: `entities-godot` opens "# Godot Engine", `foundationdb` and `idtx-flow`
+  carry GitHub's fork flag. Owning the Windows builds of FoundationDB is not owning
+  its code, so its README is not ours to cut.
+- Repositories on another organisation's remote are out of scope. The convention
+  reaches what this organisation is the source of, and nothing else.
+- When a README is over, move the content rather than deleting it. A design goes to an
+  RFD, a convention goes here, and a measurement goes to the file that produced it.
+
+Forty lines is about one screen. Past that a README stops being read from the top, and
+the part nobody reads is the part that goes stale with nobody noticing — which is the
+failure the rest of this section exists to prevent. A short README also has nowhere to
+hide a duplicate: `fabric-harness` states that a decision written twice drifts and the
+stale copy still reads as authoritative, and ten or more READMEs in this workspace
+repeated the `Weft` moduledoc's definitions until RFD 0111 pulled them out.
+
+The limit is a forcing function rather than a style preference. It is checked because
+an uncheckable rule about prose is a suggestion, and this file already says a check
+that prints and returns zero is a log line. The gate ships with its negative control,
+which pads the README past the limit and requires the check to go red.
+
+This repository's own README was 91 lines when the rule was written and is 39 now. The
+`Use` and `Why not meta` sections went to git history, and the layout it described in
+prose now lives in the `default.xml` comment that decides it — one source per fact.
+
 ## Taking inventory
 
 A workspace of forty-two repositories loses work on disk, not in review. Before changing
