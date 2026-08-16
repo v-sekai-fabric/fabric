@@ -76,11 +76,10 @@ def _write_relations(rel):
 def build(con):
     """Join the relations, encode each fact, and fill the index. Idempotent.
 
-    Entities are sorted before encoding, and that is load-bearing rather than
-    tidy. bundle() sums sin and cos across components, float addition is not
-    associative, so the same entities in a different order give the same vector
-    to about 1e-14 radians and different bytes. Sorting is the canonical order
-    that makes a rebuild byte-identical on any machine.
+    Entities are sorted for a stable `entities` column. The vectors no longer
+    need it: they are stored on the uint16 phase grid, which absorbs the ~1e-14
+    float difference that component order used to produce, so the bytes are equal
+    either way.
     """
     rel = _read_relations()
     kind = dict(zip(rel["kinds"].kind_id, rel["kinds"].name))
@@ -95,7 +94,7 @@ def build(con):
         con.execute("INSERT INTO memory(id, kind, content, entities, dim, vec, created)"
                     " VALUES (?,?,?,?,?,?,?)",
                     (int(r.memory_id), kind[r.kind_id], r.content, " ".join(ents),
-                     hrr.DIM, hrr.phases_to_bytes(vec), r.created))
+                     hrr.DIM, hrr.phases_to_u16(vec), r.created))
     con.commit()
     return len(rel["memory"])
 
@@ -132,7 +131,7 @@ def recall(con, query, n=5):
             "SELECT id, kind, content, entities, vec FROM memory"):
         # The stored fact is a bundle; its content component is bound to the
         # content role, so unbind by that role before comparing.
-        stored = hrr.unbind(hrr.bytes_to_phases(blob), hrr.encode_atom(hrr.ROLE_CONTENT))
+        stored = hrr.unbind(hrr.u16_to_phases(blob), hrr.encode_atom(hrr.ROLE_CONTENT))
         rows.append((hrr.similarity(q, stored), mid, kind, content, ents))
     rows.sort(reverse=True)
     return rows[:n]
@@ -143,7 +142,7 @@ def verify(con):
     bad = 0
     for mid, content, ents, dim, blob in con.execute(
             "SELECT id, content, entities, dim, vec FROM memory"):
-        want = hrr.phases_to_bytes(hrr.encode_fact(content, ents.split() if ents else []))
+        want = hrr.phases_to_u16(hrr.encode_fact(content, ents.split() if ents else []))
         if want != blob:
             print(f"  row {mid}: vector does not match its own content"); bad += 1
         if dim != hrr.DIM:
