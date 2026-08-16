@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Fabric memory: ETNF zstd-parquet relations, built into a SQLite index.
+"""Fabric memory: ETNF relations as JSON Lines, built into a SQLite index.
 
-The parquet relations are the source and the only thing committed. The SQLite
+The JSON Lines relations are the source and the only thing committed. The SQLite
 database and its HRR vectors are derived: encode_atom is SHA-256 over the text,
 so `build` reproduces them byte for byte from the same relations on any machine.
 Committing both would store the same facts twice, and the derived copy is 31x
@@ -16,12 +16,12 @@ The database is an ordinary SQLite file. It opens through the `weft_fdb` VFS whe
 one is registered -- the same VFS `service-store` opens `queen` with -- and as a
 plain file when none is, so the rows are the same either way.
 
-  memory.py build                      parquet -> sqlite, with the vectors
+  memory.py build                      jsonl -> sqlite, with the vectors
   memory.py add "<content>" --kind feedback --entities fabric cassie
   memory.py recall "<query>" [-n 5]
   memory.py verify
 """
-import argparse, datetime, sqlite3, sys, pathlib
+import argparse, datetime, json, sqlite3, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import hrr
 
@@ -60,17 +60,24 @@ def connect(path=DB):
 
 
 def _read_relations():
-    import pandas as pd
-    rel = {n: pd.read_parquet(ROOT / f"{n}.parquet") for n in RELATIONS}
-    for n, df in rel.items():
-        assert not df.isnull().values.any(), f"NULLs in {n} violate ETNF"
+    """One JSON object per line, one line per tuple."""
+    rel = {}
+    for n in RELATIONS:
+        rows = [json.loads(l) for l in (ROOT / f"{n}.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
+        assert all(v is not None for r in rows for v in r.values()), f"nulls in {n} violate ETNF"
+        rel[n] = rows
     return rel
 
 
 def _write_relations(rel):
-    for n, df in rel.items():
-        assert not df.isnull().values.any(), f"NULLs in {n} violate ETNF"
-        df.to_parquet(ROOT / f"{n}.parquet", compression="zstd", index=False)
+    """Sorted, one tuple per line, so a diff shows the tuples that changed."""
+    for n, rows in rel.items():
+        assert all(v is not None for r in rows for v in r.values()), f"nulls in {n} violate ETNF"
+        cols = list(rows[0].keys()) if rows else []
+        rows = sorted(rows, key=lambda r: tuple(r[c] for c in cols))
+        with open(ROOT / f"{n}.jsonl", "w", encoding="utf-8") as f:
+            for r in rows:
+                f.write(json.dumps(r, sort_keys=True, ensure_ascii=False) + "\n")
 
 
 def build(con):
@@ -82,19 +89,19 @@ def build(con):
     either way.
     """
     rel = _read_relations()
-    kind = dict(zip(rel["kinds"].kind_id, rel["kinds"].name))
-    ent = dict(zip(rel["entities"].entity_id, rel["entities"].name))
+    kind = {r["kind_id"]: r["name"] for r in rel["kinds"]}
+    ent = {r["entity_id"]: r["name"] for r in rel["entities"]}
     by_mem = {}
-    for mid, eid in zip(rel["memory_entity"].memory_id, rel["memory_entity"].entity_id):
-        by_mem.setdefault(mid, []).append(ent[eid])
+    for r in rel["memory_entity"]:
+        by_mem.setdefault(r["memory_id"], []).append(ent[r["entity_id"]])
     con.execute("DELETE FROM memory")
-    for r in rel["memory"].itertuples():
-        ents = sorted(by_mem.get(r.memory_id, []))
-        vec = hrr.encode_fact(r.content, ents)
+    for r in rel["memory"]:
+        ents = sorted(by_mem.get(r["memory_id"], []))
+        vec = hrr.encode_fact(r["content"], ents)
         con.execute("INSERT INTO memory(id, kind, content, entities, dim, vec, created)"
                     " VALUES (?,?,?,?,?,?,?)",
-                    (int(r.memory_id), kind[r.kind_id], r.content, " ".join(ents),
-                     hrr.DIM, hrr.phases_to_u16(vec), r.created))
+                    (r["memory_id"], kind[r["kind_id"]], r["content"], " ".join(ents),
+                     hrr.DIM, hrr.phases_to_u16(vec), r["created"]))
     con.commit()
     return len(rel["memory"])
 
@@ -102,24 +109,20 @@ def build(con):
 def add(con, content, kind, entities):
     if kind not in KINDS:
         raise SystemExit(f"kind must be one of {KINDS}")
-    import pandas as pd
     rel = _read_relations()
-    if kind not in set(rel["kinds"].name):
-        rel["kinds"] = pd.concat([rel["kinds"], pd.DataFrame(
-            [{"kind_id": int(rel["kinds"].kind_id.max()) + 1, "name": kind}])], ignore_index=True)
-    kid = dict(zip(rel["kinds"].name, rel["kinds"].kind_id))[kind]
+    if kind not in {r["name"] for r in rel["kinds"]}:
+        rel["kinds"].append({"kind_id": max(r["kind_id"] for r in rel["kinds"]) + 1, "name": kind})
+    kid = {r["name"]: r["kind_id"] for r in rel["kinds"]}[kind]
     for e in entities:
-        if e not in set(rel["entities"].name):
-            rel["entities"] = pd.concat([rel["entities"], pd.DataFrame(
-                [{"entity_id": int(rel["entities"].entity_id.max()) + 1, "name": e}])], ignore_index=True)
-    eid = dict(zip(rel["entities"].name, rel["entities"].entity_id))
-    mid = int(rel["memory"].memory_id.max()) + 1
-    rel["memory"] = pd.concat([rel["memory"], pd.DataFrame([{
-        "memory_id": mid, "kind_id": int(kid), "content": content,
-        "created": datetime.date.today().isoformat()}])], ignore_index=True)
-    if entities:
-        rel["memory_entity"] = pd.concat([rel["memory_entity"], pd.DataFrame(
-            [{"memory_id": mid, "entity_id": int(eid[e])} for e in entities])], ignore_index=True)
+        if e not in {r["name"] for r in rel["entities"]}:
+            rel["entities"].append(
+                {"entity_id": max(r["entity_id"] for r in rel["entities"]) + 1, "name": e})
+    eid = {r["name"]: r["entity_id"] for r in rel["entities"]}
+    mid = max(r["memory_id"] for r in rel["memory"]) + 1
+    rel["memory"].append({"memory_id": mid, "kind_id": kid, "content": content,
+                          "created": datetime.date.today().isoformat()})
+    for e in entities:
+        rel["memory_entity"].append({"memory_id": mid, "entity_id": eid[e]})
     _write_relations(rel)
     build(con)
 
