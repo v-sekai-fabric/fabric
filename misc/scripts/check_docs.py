@@ -159,6 +159,18 @@ MIRRORS = {
 }
 OUR_REMOTE = "v-sekai-multiplayer-fabric"
 
+# Names another organisation chose. The path is this repository's to pick and the name is
+# not, so recomposition asks only of repositories we can actually rename. This replaces the
+# old `vendor/` prefix exemption, which excused a directory rather than a fact: `vendor/`
+# said where code came from, and where it came from is not a position in the code. Each
+# entry states why the name is not ours to set.
+UPSTREAM_NAMES = {
+    "cassie": "the academic CASSIE project's Unity application; the name is the paper's",
+    "cassie-data": "the sketch dataset recorded for that paper",
+    "idtx-flow": "Immersive-Data-Center-Management/idtx-flow, mirrored",
+    "LabRCSF": "meshula/LabRCSF; we have no admin on it, so we cannot rename it",
+}
+
 
 def _workspace_root():
     """Where the children sit.
@@ -209,14 +221,15 @@ def check_path_recomposes(mtext, _rtext):
     RFD 0111 decided: a path that no longer rebuilds its own name means one of the two
     moved without the other.
 
-    `vendor/` is the one exception, and it is a fact rather than a taste: those names
-    belong to another organisation and cannot be set from here.
+    The exceptions are in UPSTREAM_NAMES, and each is a fact rather than a taste: that
+    name belongs to another organisation, so no rename here can make the path rebuild it.
+    Every other project was renamed to match the side it sits on.
     """
     _, _, projects = parse_manifest(mtext)
     bad = []
     for p in projects:
         path = p["path"]
-        if path.startswith("vendor/"):
+        if p["name"] in UPSTREAM_NAMES:
             continue
         # The self-entry names no directory to recompose from; the check above owns it.
         if path == ".":
@@ -537,13 +550,13 @@ BREAKAGE = {
     # The checkout directory is `path`, so the edit that breaks this check moves the clone
     # out of an ignored directory. Editing the name instead leaves `path` ignored and the
     # check passes, which makes the control certify nothing.
-    "every project directory is gitignored": ("m", 'path="vendor/LabRCSF"', 'path="not-ignored-xyz"'),
+    "every project directory is gitignored": ("m", 'path="4-entities/LabRCSF"', 'path="not-ignored-xyz"'),
     # Padding the README past the limit is the failure this gate exists to catch, and
     # it exercises the same line count the real check reads.
     "every README this project owns is under 40 lines": ("r", "## Checks", "## Checks" + "\n" * 45),
     # Moving a project to a directory its name does not rebuild is exactly the drift
     # this gate exists to catch.
-    "every path recomposes to its repository name": ("m", 'path="engine/images"', 'path="engine/pictures"'),
+    "every path recomposes to its repository name": ("m", 'path="4-entities/images"', 'path="4-entities/pictures"'),
     # The three checks below read a child's documents, which no edit to the manifest or to
     # this repository's README can reach. Their controls inject a defective document
     # instead, so each one is shown failing on the exact defect it exists to catch.
