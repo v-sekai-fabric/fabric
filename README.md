@@ -1,6 +1,6 @@
 # fabric
 
-A [repo](https://gerrit.googlesource.com/git-repo) manifest for the gyre dependencies: 43 projects across 5 GitHub orgs, from one command.
+A [repo](https://gerrit.googlesource.com/git-repo) manifest for the gyre dependencies: 45 projects across 5 GitHub orgs, from one command.
 
 ## Setup
 
@@ -11,18 +11,18 @@ repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric
 repo sync -j8
 ```
 
-`default.xml` gives each project a `path`, so the workspace is one hexagon and the
-numbered directories are its sides; that file's opening comment names all six. `repo
-sync` leaves detached HEADs, so `repo start <branch> <project>` before editing.
+`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered
+directories are its sides; that file's opening comment names all six. `repo sync` leaves detached HEADs, so `repo start <branch> <project>` before editing.
 
 ## Revisions
 
 Every project states its own `remote` and `revision`, so one that omits either fails
-at `repo init` rather than inheriting a default. Most projects track `main`. The five that do not:
+at `repo init` rather than inheriting a default. Most projects track `main`. The six that do not:
 
 | project | revision |
 |---|---|
 | `entities-godot` | `gyre` |
+| `cassie-triangulation` | `legacy` |
 | `datasource-flow` | `main-fabric` |
 | `lean-http3-queue` | `master` |
 | `cassie-data` | `master` |
