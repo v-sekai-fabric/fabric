@@ -41,6 +41,8 @@ def parse_manifest(text):
         projects.append(
             {
                 "name": p.get("name"),
+                # `path` is optional and defaults to the name, which is what repo does.
+                "path": p.get("path") or p.get("name"),
                 "remote": p.get("remote"),
                 "revision": p.get("revision"),
                 "org": (remotes.get(p.get("remote")) or "").rsplit("/", 1)[-1],
@@ -130,13 +132,18 @@ def _ls_remote(p):
 
 
 def check_gitignore_covers_projects(mtext, _rtext):
-    """Every child dir must be ignored, or a clone shows up as untracked in this repo."""
+    """Every child dir must be ignored, or a clone shows up as untracked in this repo.
+
+    The checkout directory is `path` where a project states one, so this asks about the
+    directory a clone lands in rather than the name it has on the remote. The two differ
+    for every project that sits on a side of the hexagon.
+    """
     _, _, projects = parse_manifest(mtext)
     return [
-        f"{p['name']} is not gitignored"
+        f"{p['path']} is not gitignored"
         for p in projects
         if subprocess.run(
-            ["git", "check-ignore", "-q", p["name"] + "/"], cwd=ROOT
+            ["git", "check-ignore", "-q", p["path"] + "/"], cwd=ROOT
         ).returncode
     ]
 
@@ -220,7 +227,10 @@ BREAKAGE = {
     "every project states remote and revision": ("m", ' remote="meshula" revision="dev"', ""),
     "<default> sets sync-j so fetches are not serial": ("m", '<default sync-j="16" />', "<default />"),
     "every manifest revision exists on its remote": ("m", 'revision="dev"', 'revision="no-such-xyz"'),
-    "every project directory is gitignored": ("m", 'name="LabRCSF"', 'name="not-ignored-xyz"'),
+    # The checkout directory is `path`, so the edit that breaks this check moves the clone
+    # out of an ignored directory. Editing the name instead leaves `path` ignored and the
+    # check passes, which makes the control certify nothing.
+    "every project directory is gitignored": ("m", 'path="vendor/LabRCSF"', 'path="not-ignored-xyz"'),
 }
 
 

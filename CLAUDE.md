@@ -233,17 +233,22 @@ repositories, never from memory.
 
 ```sh
 cd P:/fabric
-for d in */; do d=${d%/}; [ -d "$d/.git" ] || continue; cd "$d"
-  u=$(git status --porcelain | grep -c '^??')
-  m=$(git status --porcelain | grep -vc '^??')
-  b=$(git branch --show-current)
-  up=$(git rev-parse --verify -q "origin/$b" >/dev/null 2>&1 || echo NO-UPSTREAM)
-  ah=$(git rev-list --count "origin/$b..HEAD" 2>/dev/null || echo ?)
-  [ "$u$m$ah" != "000" -o -n "$up" ] && printf '%-28s %-30s untracked=%-4s modified=%-4s ahead=%-4s %s\n' \
-    "$d" "$b" "$u" "$m" "$ah" "$up"
-  cd ..
+for d in */ */*/; do d=${d%/}; [ -d "$d/.git" ] || continue
+  ( cd "$d"
+    u=$(git status --porcelain | grep -c '^??')
+    m=$(git status --porcelain | grep -vc '^??')
+    b=$(git branch --show-current)
+    up=$(git rev-parse --verify -q "origin/$b" >/dev/null 2>&1 || echo NO-UPSTREAM)
+    ah=$(git rev-list --count "origin/$b..HEAD" 2>/dev/null || echo ?)
+    [ "$u$m$ah" != "000" -o -n "$up" ] && printf '%-34s %-30s untracked=%-4s modified=%-4s ahead=%-4s %s\n' \
+      "$d" "$b" "$u" "$m" "$ah" "$up" )
 done
 ```
+
+The glob reaches two levels because `default.xml` puts most children on a side of the hexagon,
+one directory down. A one-level glob finds the eight projects at the root and reports the other
+thirty-four as absent, which is the answer this command exists to prevent. The subshell around
+the body keeps the return path correct from either depth.
 
 Then separate the real from the noise, because most of what it prints is noise. A Windows
 checkout of a repository with shell scripts in it reports a hundred files `modified` that are

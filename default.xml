@@ -3,6 +3,40 @@
   <!-- fabric: the gyre dependency set. Converted from .meta (mateodelnorte/meta),
        whose per-repo branches rode inside the URL string as a git clone branch flag. -->
 
+  <!-- The checkout layout.
+
+       RFD 0111 gives this stack six words that name a position in the code:
+       transport layer, contract, interactor, entity, repository, and data
+       source. "Service" names a deployment set, and ring, port, actor, and
+       controller name runtime things. Six position words make six sides, so
+       the workspace is one hexagon and the numbered directories are its sides.
+
+         1-transport   the input that triggers an interactor
+         2-contract    what a transport layer and an interactor compose against
+         3-interactor  a process that performs actions on entities
+         4-entities    the simulated things, and the actions on them
+         5-repository  an interface that gets, creates, and changes entities
+         6-datasource  an implementation of a repository
+
+       The numbers carry the ring order, which the alphabet loses. A listing
+       then prints the driving side first, the inside in the middle, and the
+       driven side last, so the rule that all dependencies point inward reads
+       as "every side points at 3 and 4". Sides 2 and 5 hold no git repository
+       in this dependency set yet.
+
+       Four directories hold what the ring does not:
+
+         service/  the sets of interactors that share a ring
+         lean/     the Lean workspaces that RFD 0111 does not classify
+         vendor/   the git repositories of another organisation
+         doc/      the manuals
+
+       A git repository that RFD 0111 gives no type stays at the root. The
+       convention applies where there is a word for the thing, and nowhere else.
+
+       `path` decides the checkout directory alone. Every name below is the
+       name on GitHub and this file changes none of them. -->
+
   <remote name="v-sekai-multiplayer-fabric" fetch="https://github.com/v-sekai-multiplayer-fabric" />
   <remote name="v-sekai" fetch="https://github.com/V-Sekai" />
   <remote name="fire" fetch="https://github.com/fire" />
@@ -13,46 +47,65 @@
   <!-- omits either fails at init instead of inheriting a default nobody chose. -->
   <default sync-j="16" />
 
-  <project name="entities-godot" remote="v-sekai-multiplayer-fabric" revision="gyre" />
+  <!-- 1: the transport layers -->
+  <project name="transport-asset" path="1-transport/asset" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-fanout" path="1-transport/fanout" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-gateway" path="1-transport/gateway" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-ingest" path="1-transport/ingest" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- 3: the interactors -->
+  <project name="interactor-physics" path="3-interactor/physics" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- 4: the entities -->
+  <project name="entities-godot" path="4-entities/godot" remote="v-sekai-multiplayer-fabric" revision="gyre" />
+  <project name="entities-lean-combat" path="4-entities/lean-combat" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-loot" path="4-entities/lean-loot" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-progression" path="4-entities/lean-progression" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-rebac" path="4-entities/lean-rebac" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-lean-shared" path="4-entities/lean-shared" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- 6: the data sources -->
+  <project name="datasource-flow" path="6-datasource/flow" remote="v-sekai-multiplayer-fabric" revision="main-fabric" />
+  <project name="datasource-flow-project" path="6-datasource/flow-project" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- The services: the sets that share a ring -->
+  <project name="service-godot" path="service/godot" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="service-physics" path="service/physics" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="service-store" path="service/store" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- The Lean workspaces RFD 0111 does not classify -->
+  <project name="lean-connection-fsm" path="lean/connection-fsm" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-duckdb" path="lean/duckdb" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-entity-packet" path="lean/entity-packet" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-fabric-protocol" path="lean/fabric-protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-http3-queue" path="lean/http3-queue" remote="v-sekai-multiplayer-fabric" revision="master" />
+  <project name="lean-humanoid-rom" path="lean/humanoid-rom" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-interest-mgmt" path="lean/interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="lean-spatial-oracle" path="lean/spatial-oracle" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- The manuals -->
+  <project name="multiplayer-fabric-manuals" path="doc/multiplayer-fabric-manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- Another organisation owns these names, so the checkout places them
+       where the name cannot be changed. -->
+  <project name="taskweft" path="vendor/taskweft" remote="taskweft" revision="main" />
+  <project name="flowref" path="vendor/flowref" remote="fire" revision="main" />
+  <project name="flowref-decompiler" path="vendor/flowref-decompiler" remote="fire" revision="main" />
+  <project name="V-Sekai.cassie" path="vendor/V-Sekai.cassie" remote="v-sekai" revision="main" />
+  <project name="cassie" path="vendor/cassie" remote="v-sekai" revision="main" />
+  <project name="cassie-data" path="vendor/cassie-data" remote="v-sekai" revision="master" />
+  <project name="xr-grid" path="vendor/xr-grid" remote="v-sekai" revision="main" />
+  <project name="TOOL_model_explorer" path="vendor/TOOL_model_explorer" remote="v-sekai" revision="main" />
+  <project name="LabRCSF" path="vendor/LabRCSF" remote="meshula" revision="dev" />
+
+  <!-- RFD 0111 gives these no type, so they stay at the root until an RFD
+       decides one. A guess here would state a type that is not theirs. -->
   <project name="godot-images" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="fabric-godot-assembly" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="service-godot" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="fabric-wt-harness" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="vsekai-godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="service-store" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="foundationdb" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="multiplayer-fabric-manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-asset" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-fanout" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-gateway" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-ingest" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="service-physics" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="interactor-physics" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-shared" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-combat" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-connection-fsm" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-duckdb" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-entity-packet" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-fabric-protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-http3-queue" remote="v-sekai-multiplayer-fabric" revision="master" />
-  <project name="lean-humanoid-rom" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-loot" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-progression" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-rebac" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="lean-spatial-oracle" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="taskweft" remote="taskweft" revision="main" />
-  <project name="flowref" remote="fire" revision="main" />
-  <project name="flowref-decompiler" remote="fire" revision="main" />
-  <project name="V-Sekai.cassie" remote="v-sekai" revision="main" />
-  <project name="cassie" remote="v-sekai" revision="main" />
-  <project name="cassie-data" remote="v-sekai" revision="master" />
   <project name="idtx-flow" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="datasource-flow" remote="v-sekai-multiplayer-fabric" revision="main-fabric" />
-  <project name="datasource-flow-project" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="xr-grid" remote="v-sekai" revision="main" />
-  <project name="TOOL_model_explorer" remote="v-sekai" revision="main" />
-  <project name="fabric-wt-harness" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="wallpaper-parsec" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="LabRCSF" remote="meshula" revision="dev" />
 </manifest>

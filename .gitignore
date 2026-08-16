@@ -13,33 +13,28 @@
 # every child not yet cloned, which is the state a fresh checkout is in and the state this
 # check is most wanted in.
 #
-# RFD 0111 names a child by its type first, so most of these are one glob per type and a
-# child added later is ignored without an edit here. The named entries are the children the
-# convention does not classify.
-/contract-*/
-/datasource-*/
-/entities-*/
-/interactor-*/
-/service-*/
-/transport-*/
-/LabRCSF/
-/TOOL_model_explorer/
-/V-Sekai.cassie/
+# `default.xml` gives each child a `path`, so a child lands in the directory for its side of
+# the hexagon and one entry covers that whole side. A child added to a side later is ignored
+# without an edit here. The named entries at the end are the children RFD 0111 does not
+# classify, which stay at the root.
+/1-transport/
+/2-contract/
+/3-interactor/
+/4-entities/
+/5-repository/
+/6-datasource/
+/service/
+/lean/
+/vendor/
+/doc/
 /blender-mcp/
-/cassie-data/
-/cassie/
 /fabric-godot-assembly/
 /fabric-wt-harness/
-/flowref-decompiler/
-/flowref/
 /foundationdb/
 /godot-images/
 /idtx-flow/
-/lean-*/
-/multiplayer-fabric-manuals/
-/taskweft/
 /vsekai-godot-mcp/
-/xr-grid/
+/wallpaper-parsec/
 
 # Build and run output from work done at the workspace root rather than inside a child. Logs
 # from a long engine build or a test server land here and are worth keeping on disk while a
@@ -49,5 +44,4 @@
 # Scratch that is neither a child repo nor a build artefact.
 .repo/
 node_modules/
-/wallpaper-parsec/
 /.playwright-mcp/
