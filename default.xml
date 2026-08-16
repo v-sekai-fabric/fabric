@@ -84,7 +84,7 @@
   <project name="lean-spatial-oracle" path="lean/spatial-oracle" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- The manuals -->
-  <project name="multiplayer-fabric-manuals" path="doc/multiplayer-fabric-manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="multiplayer-fabric-manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- Another organisation owns these names, so the checkout places them
        where the name cannot be changed. -->
@@ -100,12 +100,12 @@
 
   <!-- RFD 0111 gives these no type, so they stay at the root until an RFD
        decides one. A guess here would state a type that is not theirs. -->
-  <project name="godot-images" path="engine/images" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="engine-images" path="engine/images" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="engine-assembly" path="engine/assembly" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-wt" path="2-contract/wt" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="vsekai-godot-mcp" path="authoring/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="blender-mcp" path="authoring/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="foundationdb" path="6-datasource/foundationdb" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="authoring-godot-mcp" path="authoring/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="authoring-blender-mcp" path="authoring/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="datasource-foundationdb" path="6-datasource/foundationdb" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="idtx-flow" path="vendor/idtx-flow" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="wallpaper-parsec" remote="v-sekai-multiplayer-fabric" revision="main" />
 </manifest>

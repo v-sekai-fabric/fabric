@@ -108,7 +108,7 @@ instead of it.
 
 ### Driving Godot locally
 
-`vsekai-godot-mcp` is the local harness for anything Godot, and it is available here rather
+`authoring-godot-mcp` is the local harness for anything Godot, and it is available here rather
 than being something to build each time. Vendor it into a project as
 `addons/vsekai_godot_mcp` from the repository's `addon-root` branch — Godot only scans
 `res://addons/*/plugin.cfg`, so the whole repository subtreed puts it one level too deep and
@@ -231,7 +231,7 @@ by a control that reported its own pattern had gone dead. Only the third one fou
   under 40 lines. `misc/scripts/check_docs.py` gates it, offline, at commit stage.
 - A **mirror** is exempt. Its README belongs to its upstream, and editing it forks a
   document this project does not own. `MIRRORS` in that script names each one and the
-  evidence: `entities-godot` opens "# Godot Engine", `foundationdb` and `idtx-flow`
+  evidence: `entities-godot` opens "# Godot Engine", `datasource-foundationdb` and `idtx-flow`
   carry GitHub's fork flag. Owning the Windows builds of FoundationDB is not owning
   its code, so its README is not ours to cut.
 - Repositories on another organisation's remote are out of scope. The convention
