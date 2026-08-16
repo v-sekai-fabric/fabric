@@ -110,7 +110,7 @@ def _sessions(path):
             cur = []
         cur.append(this)
     sessions.append(cur)
-    return [(s[0][0], s[-1][0], len(s), s[-1][1]) for s in sessions]
+    return [(s[0][0], s[-1][0], len(s), [c[1] for c in s]) for s in sessions]
 
 
 def _escape(s):
@@ -122,10 +122,10 @@ def build():
     entries = []
     for rel, path in _checkouts():
         lane = LANES.get(rel, DEFAULT_LANE)
-        for start, end, n, subj in _sessions(path):
+        for start, end, n, subjects in _sessions(path):
             hours = (end - start) / 3600.0
             day = datetime.datetime.utcfromtimestamp(end).date().isoformat()
-            entries.append((day, rel, lane, hours, n, subj))
+            entries.append((day, rel, lane, hours, n, subjects))
     entries.sort()
 
     first = entries[0][0] if entries else datetime.date.today().isoformat()
@@ -138,6 +138,13 @@ def build():
         ";; PERT table in CLAUDE.md holds guesses about work not yet done, and this",
         ";; holds what happened. A one-commit session spans zero, so this under-counts,",
         ";; which is a stated bias rather than a corrected one.",
+        ";;",
+        ";; Sessions in different checkouts overlap. Work moves between repositories inside",
+        ";; one sitting, so their spans are concurrent and summing them counts the same wall",
+        ";; clock more than once -- 2026-08-16 totals 40.04 h, which no day contains. The",
+        ";; totals are therefore effort by lane, not elapsed time, and the share between",
+        ";; lanes is the number worth reading. Elapsed time would need the union of the",
+        ";; spans, which is a different report and is not this one.",
         "",
         'option "title" "fabric-delivery: hours booked from git sessions"',
         'option "operating_currency" "HOURS"',
@@ -146,8 +153,14 @@ def build():
     for a in ACCOUNTS:
         lines.append(f"{first} open {a}  HOURS")
     lines += ["", f'{today} event "deliverable" "{_escape(DELIVERABLE)}"', ""]
-    for day, rel, lane, hours, n, subj in entries:
-        lines.append(f'{day} * "{_escape(rel)}" "{_escape(subj)[:96]}"')
+    for day, rel, lane, hours, n, subjects in entries:
+        # The narration is what the session ended on; `steps` is every commit in it, in
+        # order. A session that books two hours and says only what it finished with tells
+        # you the cost and hides the work, which is the half worth reading later.
+        lines.append(f'{day} * "{_escape(rel)}" "{_escape(subjects[-1])[:88]}"')
+        lines.append(f"  commits: {n}")
+        steps = " | ".join(_escape(s)[:72] for s in subjects)
+        lines.append(f'  steps: "{steps[:900]}"')
         lines.append(f"  {lane:<26} {hours:8.2f} HOURS")
         lines.append(f"  Income:Sessions")
         lines.append("")
