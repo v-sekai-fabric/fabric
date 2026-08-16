@@ -422,6 +422,10 @@ def check_names_resolve(mtext, _rtext):
         # A fenced block is a command or a config, not prose making a claim, and a clone
         # URL that still redirects is somebody's working command line.
         prose = re.sub(r"```.*?```", "", text, flags=re.S)
+        # A repository under another owner is that owner's, whatever it is called here.
+        # ahujasid/blender-mcp is upstream of transport-blender-mcp, and resolving the bare
+        # token against this organisation turns a correct citation into a rename to apply.
+        prose = re.sub(rf"github\.com/(?!{re.escape(OUR_REMOTE)}/)[\w.-]+/[\w.-]+", "", prose)
         for tok in sorted(set(re.findall(r"\b[a-z][a-z0-9]*(?:-[a-z0-9]+){1,4}\b", prose))):
             if tok in live:
                 continue
