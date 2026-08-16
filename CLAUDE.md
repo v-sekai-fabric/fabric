@@ -95,7 +95,7 @@ the tree still in the state that produced it. The same failure in CI is a log to
 tree you cannot poke at, and a queue between every attempt — so a two-line fix costs a
 round-trip instead of a rebuild.
 
-And some things simply cannot go to CI. `fabric-wt-harness` drives the transport against a
+And some things simply cannot go to CI. `contract-wt` drives the transport against a
 Godot server on loopback, and `bench_players` measures a pinned core; a shared runner whose
 neighbour is busy is not a core worth recording. That is why `bench_players` reports the budget
 and only asserts it under `--gate`.
@@ -108,7 +108,7 @@ instead of it.
 
 ### Driving Godot locally
 
-`vsekai-godot-mcp` is the local harness for anything Godot, and it is available here rather
+`authoring-godot-mcp` is the local harness for anything Godot, and it is available here rather
 than being something to build each time. Vendor it into a project as
 `addons/vsekai_godot_mcp` from the repository's `addon-root` branch — Godot only scans
 `res://addons/*/plugin.cfg`, so the whole repository subtreed puts it one level too deep and
@@ -231,7 +231,7 @@ by a control that reported its own pattern had gone dead. Only the third one fou
   under 40 lines. `misc/scripts/check_docs.py` gates it, offline, at commit stage.
 - A **mirror** is exempt. Its README belongs to its upstream, and editing it forks a
   document this project does not own. `MIRRORS` in that script names each one and the
-  evidence: `entities-godot` opens "# Godot Engine", `foundationdb` and `idtx-flow`
+  evidence: `entities-godot` opens "# Godot Engine", `datasource-foundationdb` and `idtx-flow`
   carry GitHub's fork flag. Owning the Windows builds of FoundationDB is not owning
   its code, so its README is not ours to cut.
 - Repositories on another organisation's remote are out of scope. The convention

@@ -139,7 +139,7 @@ README_MAX = 40
 MIRRORS = {
     # This project owns the Windows builds here and none of the code, so the README
     # is upstream's to write. GitHub carries the fork flag.
-    "foundationdb": "apple/foundationdb",
+    "datasource-foundationdb": "apple/foundationdb",
     "idtx-flow": "Immersive-Data-Center-Management/idtx-flow",
     # No fork flag, and the README is still upstream's: it opens "# Godot Engine" and
     # links godotengine.org nineteen times.
@@ -186,6 +186,33 @@ def check_readme_length(mtext, rtext):
         n = len(rp.read_text(encoding="utf-8", errors="replace").splitlines())
         if n >= README_MAX:
             bad.append(f"{p['path']}/README.md is {n} lines, limit {README_MAX - 1}")
+    return bad
+
+
+def check_path_recomposes(mtext, _rtext):
+    """A directory and its child MUST recompose to the repository name.
+
+    `1-transport/gateway` is `transport-gateway`, and the leading digit sorts the ring
+    rather than naming anything. This is what stops the checkout drifting from the names
+    RFD 0111 decided: a path that no longer rebuilds its own name means one of the two
+    moved without the other.
+
+    `vendor/` is the one exception, and it is a fact rather than a taste: those names
+    belong to another organisation and cannot be set from here.
+    """
+    _, _, projects = parse_manifest(mtext)
+    bad = []
+    for p in projects:
+        path = p["path"]
+        if path.startswith("vendor/"):
+            continue
+        if "/" in path:
+            d, child = path.split("/", 1)
+            rebuilt = re.sub(r"^\d-", "", d) + "-" + child
+        else:
+            rebuilt = path
+        if rebuilt != p["name"]:
+            bad.append(f"{path} rebuilds to {rebuilt}, but the repository is {p['name']}")
     return bad
 
 
@@ -275,6 +302,7 @@ CHECKS = [
     ("every manifest revision exists on its remote", check_revisions_exist, "network"),
     ("every project directory is gitignored", check_gitignore_covers_projects, "local"),
     ("every README this project owns is under 40 lines", check_readme_length, "local"),
+    ("every path recomposes to its repository name", check_path_recomposes, "local"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -293,6 +321,9 @@ BREAKAGE = {
     # Padding the README past the limit is the failure this gate exists to catch, and
     # it exercises the same line count the real check reads.
     "every README this project owns is under 40 lines": ("r", "## Checks", "## Checks" + "\n" * 45),
+    # Moving a project to a directory its name does not rebuild is exactly the drift
+    # this gate exists to catch.
+    "every path recomposes to its repository name": ("m", 'path="engine/images"', 'path="engine/pictures"'),
 }
 
 

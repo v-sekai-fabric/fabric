@@ -15,8 +15,8 @@
 #
 # `default.xml` gives each child a `path`, so a child lands in the directory for its side of
 # the hexagon and one entry covers that whole side. A child added to a side later is ignored
-# without an edit here. The named entries at the end are the children RFD 0111 does not
-# classify, which stay at the root.
+# without an edit here. `wallpaper-parsec` is named on its own because it is the one child no
+# word here fits, and it stays at the root until one does.
 /1-transport/
 /2-contract/
 /3-interactor/
@@ -26,14 +26,9 @@
 /service/
 /lean/
 /vendor/
-/doc/
-/blender-mcp/
-/fabric-godot-assembly/
-/fabric-wt-harness/
-/foundationdb/
-/godot-images/
-/idtx-flow/
-/vsekai-godot-mcp/
+/multiplayer-fabric-manuals/
+/authoring/
+/engine/
 /wallpaper-parsec/
 
 # Build and run output from work done at the workspace root rather than inside a child. Logs
