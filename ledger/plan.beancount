@@ -1,4 +1,14 @@
-;; The plan. Hand-authored, unlike delivery.beancount, which git generates.
+;; The plan. HYPOTHETICAL. Nothing here was spent.
+;;
+;; Every amount below is an estimate of work nobody has done, so it is booked as a
+;; liability -- an obligation outstanding -- and never as an expense. Expenses are
+;; hours that went somewhere, and they live in delivery.beancount, which git
+;; generates. The two files share no account by construction, and check_docs.py
+;; fails if they ever do, because a planned hour that reads as a spent one is a
+;; plan reporting itself as progress.
+;;
+;; Do not add the two together. `Liabilities:Planned:Mesh` is what is owed and
+;; `Expenses:Delivery:Mesh` is what was paid; a sum of them is neither.
 ;;
 ;; Only two things are planned: the first task and the last. Everything between
 ;; them is guesswork about a state nobody has observed yet, and writing it down
@@ -33,11 +43,11 @@
 ;; Actual hours never land here -- they land in delivery.beancount, from git -- so
 ;; the plan cannot quietly become a claim about what happened.
 
-option "title" "fabric-plan: the critical path to a mesh a player can trust"
+option "title" "fabric-plan: HYPOTHETICAL, the critical path to a mesh a player can trust"
 option "operating_currency" "HOURS"
 
-2026-08-16 open Expenses:Plan:Mesh     HOURS
-2026-08-16 open Liabilities:Remaining  HOURS
+2026-08-16 open Liabilities:Planned:Mesh  HOURS
+2026-08-16 open Equity:Plan               HOURS
 
 ;; The last task. Not estimated: it is the condition that closes the thread, and a
 ;; number against it would be a guess about work that has not been scoped.
@@ -51,8 +61,9 @@ option "operating_currency" "HOURS"
   optimistic: 0.06
   likely: 0.81
   pessimistic: 10.91
-  Expenses:Plan:Mesh    2.37 HOURS
-  Liabilities:Remaining
+  hypothetical: TRUE
+  Liabilities:Planned:Mesh    2.37 HOURS
+  Equity:Plan
 
 ;; Accomplished. Hours for these are in delivery.beancount, booked from git.
 2026-08-16 * "plan" "L0 book the hours and fail the build when the deliverable does not move"
@@ -62,5 +73,6 @@ option "operating_currency" "HOURS"
   optimistic: 0.30
   likely: 2.77
   pessimistic: 25.52
-  Expenses:Plan:Mesh    6.15 HOURS
-  Liabilities:Remaining
+  hypothetical: TRUE
+  Liabilities:Planned:Mesh    6.15 HOURS
+  Equity:Plan

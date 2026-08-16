@@ -499,6 +499,7 @@ def _licence_of(org, name):
 
 PAGES_OVERRIDE = None
 LEDGER_OVERRIDE = None
+SEPARATION_OVERRIDE = None
 
 # One 2-4 commit session is te 1.16 h in the table CLAUDE.md derives from git, and it is
 # the smallest unit of real work this organisation does. A month booking less than that to
@@ -506,6 +507,44 @@ LEDGER_OVERRIDE = None
 # is a rename sweep brushing a file, not a session.
 MIN_DELIVERY_H = 1.16
 DELIVERY_WINDOW_DAYS = 30
+
+
+def check_plan_and_spend_are_separate(_mtext, _rtext):
+    """A planned hour and a spent hour MUST never share an account.
+
+    The plan estimates work nobody has done, so it books liabilities: an obligation
+    outstanding. The ledger books expenses: hours that went somewhere. Put an estimate in
+    an expense account and the plan reports itself as progress, which is the failure this
+    whole ledger exists to stop, arriving from the inside.
+
+    So the check is structural rather than a matter of care -- the two files are read and
+    their account names intersected, and any overlap fails.
+    """
+    if SEPARATION_OVERRIDE is not None:
+        # The check reads two files this repository generates, so no manifest edit can
+        # perturb it. The control supplies the overlap instead.
+        return [f"{a} carries both planned and spent hours; an estimate reads as progress"
+                for a in sorted(SEPARATION_OVERRIDE)]
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import ledger
+
+    def accounts(path):
+        out = set()
+        for line in path.read_text(encoding="utf-8").splitlines():
+            s = line.strip()
+            for kind in ("Assets:", "Liabilities:", "Equity:", "Income:", "Expenses:"):
+                if s.startswith(kind) or s.startswith("open " + kind):
+                    out.add(s.replace("open ", "").split()[0])
+        return out
+
+    for f in (ledger.LEDGER, ledger.PLAN):
+        if not f.exists():
+            return [f"{f.name} is missing"]
+    shared = accounts(ledger.LEDGER) & accounts(ledger.PLAN)
+    if shared:
+        return [f"{a} carries both planned and spent hours; an estimate reads as progress"
+                for a in sorted(shared)]
+    return []
 
 
 def check_deliverable_moved(_mtext, _rtext):
@@ -619,6 +658,7 @@ CHECKS = [
     ("every repository we own carries a usable licence", check_licences, "network"),
     ("a project that serves Pages keeps the name its URL contains", check_pages_names, "network"),
     ("the deliverable moved this month", check_deliverable_moved, "local"),
+    ("planned and spent hours never share an account", check_plan_and_spend_are_separate, "local"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -663,6 +703,9 @@ BREAKAGE = {
     # window. The control replaces the reading instead, with the exact one that was true
     # when this check was written: 0.06 h in thirty days.
     "the deliverable moved this month": ("g", (0.06, 30)),
+    # Booking a planned hour to the account the ledger spends from is the exact confusion
+    # this check exists to stop, so the control makes that edit.
+    "planned and spent hours never share an account": ("s", {"Expenses:Delivery:Mesh"}),
 }
 
 
@@ -684,12 +727,15 @@ def main():
 
     if self_test:
         print("\nnegative controls (each check must fail on broken input):")
-        global DOC_OVERRIDE, PAGES_OVERRIDE, LEDGER_OVERRIDE
+        global DOC_OVERRIDE, PAGES_OVERRIDE, LEDGER_OVERRIDE, SEPARATION_OVERRIDE
         for label, fn, _kind in selected:
             spec = BREAKAGE[label]
             m2, r2 = mtext, rtext
             DOC_OVERRIDE = PAGES_OVERRIDE = LEDGER_OVERRIDE = None
-            if spec[0] == "g":
+            SEPARATION_OVERRIDE = None
+            if spec[0] == "s":
+                SEPARATION_OVERRIDE = spec[1]
+            elif spec[0] == "g":
                 LEDGER_OVERRIDE = spec[1]
             elif spec[0] == "p":
                 PAGES_OVERRIDE = spec[1]
@@ -717,6 +763,7 @@ def main():
                 LICENCE_OVERRIDE = None
                 PAGES_OVERRIDE = None
                 LEDGER_OVERRIDE = None
+                SEPARATION_OVERRIDE = None
             if broke:
                 print(f"ok    {label} fails on broken input")
             else:
