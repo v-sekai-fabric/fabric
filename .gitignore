@@ -37,3 +37,4 @@ node_modules/
 
 # Built from memory/*.usda by misc/scripts/memory.py; the relations are the source.
 /memory/fabric.sqlite3
+/.DS_Store

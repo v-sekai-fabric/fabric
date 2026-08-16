@@ -30,6 +30,13 @@
        the drift the six words exist to stop. A directory that names no position
        collects whatever nobody classified, and it grew to eight of them.
 
+       This repository is not among them. `repo init` already clones it to
+       `.repo/manifests` and reads the manifest from there, so a `path="."`
+       entry produced a second working copy: edits at the workspace root were
+       invisible to repo, and `repo sync` reset the root over them. It cost an
+       unpushed commit before it was removed. Work on this repository in
+       `.repo/manifests`, which is the checkout repo actually reads.
+
        `path` decides the checkout directory and this repository chooses it.
        `name` is the name on GitHub and the two are independent, so a project
        sits on its side whether or not it was renamed. Recomposition asks them
@@ -48,12 +55,6 @@
   <!-- No remote or revision here: every project states both, so a project that -->
   <!-- omits either fails at init instead of inheriting a default nobody chose. -->
   <default sync-j="16" />
-
-  <!-- 0: this repository. path="." puts it at the workspace root, which is the layout
-       .gitignore already assumes when it ignores every sibling directory below. Without
-       it the repository that defines the workspace is the one absent from it, and an
-       edit to a gate or to memory has nowhere in the checkout to live. -->
-  <project name="fabric" path="." remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 1: the transport layers. Each terminates a client protocol and triggers an
        interactor. The two MCP servers are transport layers for an authoring client
