@@ -53,6 +53,41 @@ option "operating_currency" "HOURS"
 ;; number against it would be a guess about work that has not been scoped.
 2026-08-16 event "deliverable" "A player draws a closed curve in VR, gets a mesh back, and the mesh is correct by a check that can fail"
 
+;; The budget: one working week, 40 hours, fixed. The scope is not.
+;;
+;; Sizing a scope in advance is the average-pilot error. A cockpit built for the
+;; mean pilot fit none of the 4,063 Daniels measured, and the fix was not a better
+;; mean, it was adjustment. This plan has the same shape: the same five tasks cost
+;; 13.81 h at the median and 51.24 h at the 99th, a spread of nearly four to one,
+;; so a scope chosen for either number is wrong for the other. Fix the budget and
+;; let the scope slide.
+;;
+;; The rail, taken in order. Cumulative total effort at 99%:
+;;
+;;   1. P0  link geogram on macOS            10.98 h
+;;   2. E   run the pipeline once            16.07 h
+;;   3. A   the differential gate            31.14 h
+;;   4. B   boundary triangulation           ~41    h
+;;   5. G   clusterIncidence determinism     51.24 h
+;;
+;; Work down it and stop where the week runs out. At the median all five fit inside
+;; 40 h with room; at the 99th only the first three do. Which is true is not known
+;; in advance, which is the whole reason the scope adjusts instead of the budget.
+;;
+;; Only the notch being worked is written as a task below. The rest are the rail,
+;; not commitments, because an estimate written down as a plan reads as a decision
+;; -- which is how OPEN_GAPS carried 231/234 for eight weeks.
+;;
+;; The survey says this is the right week to buy. Six of fifteen responses name
+;; creation in one slot or the other -- a meshing pen, user generated content,
+;; moddable, absolute interactability, and save-and-share twice -- the largest
+;; cluster in it, and the one this deliverable serves. The same memo applies there:
+;; those six did not name a feature, they named the adjustment mechanism, which is
+;; what lets holly have fishing and dragos have his horde without either choosing.
+2026-08-16 custom "budget" Liabilities:Planned:Mesh "weekly" 40.00 HOURS
+
+2026-08-16 note Liabilities:Planned:Mesh "Scope slides, budget does not. Stop at whichever notch of P0-E-A-B-G the 40 h runs out on; all five fit at the median and only the first three at the 99th, and which holds is not known until P0 reports."
+
 ;; The first task. 98% likely to fit inside one eight-hour day, which is why it is
 ;; the whole of today's plan; P0 -> E is 94.4% and the full chain 68.8%.
 2026-08-16 * "plan" "P0 link geogram on macOS"
