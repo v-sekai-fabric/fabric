@@ -47,6 +47,12 @@
   <!-- omits either fails at init instead of inheriting a default nobody chose. -->
   <default sync-j="16" />
 
+  <!-- 0: this repository. path="." puts it at the workspace root, which is the layout
+       .gitignore already assumes when it ignores every sibling directory below. Without
+       it the repository that defines the workspace is the one absent from it, and an
+       edit to a gate or to memory has nowhere in the checkout to live. -->
+  <project name="fabric" path="." remote="v-sekai-multiplayer-fabric" revision="main" />
+
   <!-- 1: the transport layers -->
   <project name="transport-asset" path="1-transport/asset" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-fanout" path="1-transport/fanout" remote="v-sekai-multiplayer-fabric" revision="main" />

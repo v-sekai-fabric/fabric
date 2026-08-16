@@ -218,6 +218,9 @@ def check_path_recomposes(mtext, _rtext):
         path = p["path"]
         if path.startswith("vendor/"):
             continue
+        # The self-entry names no directory to recompose from; the check above owns it.
+        if path == ".":
+            continue
         if "/" in path:
             d, child = path.split("/", 1)
             rebuilt = re.sub(r"^\d-", "", d) + "-" + child
@@ -226,6 +229,53 @@ def check_path_recomposes(mtext, _rtext):
         if rebuilt != p["name"]:
             bad.append(f"{path} rebuilds to {rebuilt}, but the repository is {p['name']}")
     return bad
+
+
+def _self_name():
+    """This repository's name on its remote, read from git rather than assumed.
+
+    Not `git remote get-url origin`: repo names a project's remote after the manifest
+    remote, so in the workspace this check exists to produce, the only remote is called
+    `v-sekai-multiplayer-fabric` and asking for `origin` fails. This reads whatever remotes
+    there are and takes the name they agree on, which holds for a repo checkout, a plain
+    clone, and a CI checkout alike.
+    """
+    r = subprocess.run(["git", "remote", "-v"], cwd=ROOT, capture_output=True, text=True)
+    if r.returncode:
+        return None
+    names = {line.split()[1].rstrip("/").rsplit("/", 1)[-1].removesuffix(".git")
+             for line in r.stdout.splitlines() if len(line.split()) >= 2}
+    return names.pop() if len(names) == 1 else None
+
+
+def check_manifest_checks_itself_out(mtext, _rtext):
+    """The manifest MUST check itself out, or an edit to it lives nowhere the workspace has.
+
+    `repo` keeps the manifest in `.repo/manifests`, which is its own bookkeeping: nothing
+    there sits on a branch anyone pushes from. So without a self-entry the repository that
+    defines this workspace is the single repository absent from it, and the only copy of a
+    change to a gate, to the manifest or to memory sits in a scratch directory that no
+    `repo sync` restores. That is not a style point -- the repository escaped its own
+    licence check the same way, because check_licences walks projects and this was not one.
+
+    `path="."` is how repo states it: manifest_xml.py admits it via
+    `_CheckLocalPath(path, dir_ok=True, cwd_dot_ok=True)` and notes that "the '.' project is
+    handled specially in Project.Sync_LocalHalf". It lands this repository at the workspace
+    root, which is the layout .gitignore has always assumed when it ignores `/1-transport/`
+    and every other sibling.
+    """
+    _, _, projects = parse_manifest(mtext)
+    selves = [p for p in projects if p["path"] == "."]
+    if not selves:
+        return ['no project has path="."; this repository never lands in the workspace']
+    if len(selves) > 1:
+        return [f'{len(selves)} projects claim path="."; only one can be the workspace root']
+    me = _self_name()
+    if me is None:
+        return ["cannot read origin, so the self-entry's name cannot be checked"]
+    if selves[0]["name"] != me:
+        return [f'the project at path="." is {selves[0]["name"]}, but this repository is {me}']
+    return []
 
 
 def check_gitignore_covers_projects(mtext, _rtext):
@@ -239,7 +289,10 @@ def check_gitignore_covers_projects(mtext, _rtext):
     return [
         f"{p['path']} is not gitignored"
         for p in projects
-        if subprocess.run(
+        # The self-entry is this repository, not a clone landing inside it. Ignoring the
+        # root would ignore everything, so it is the one path that must not be.
+        if p["path"] != "."
+        and subprocess.run(
             ["git", "check-ignore", "-q", p["path"] + "/"], cwd=ROOT
         ).returncode
     ]
@@ -457,6 +510,7 @@ CHECKS = [
     ("every project states remote and revision", check_explicit_attrs, "local"),
     ("<default> sets sync-j so fetches are not serial", check_sync_j, "local"),
     ("every manifest revision exists on its remote", check_revisions_exist, "network"),
+    ("the manifest checks itself out", check_manifest_checks_itself_out, "local"),
     ("every project directory is gitignored", check_gitignore_covers_projects, "local"),
     ("every README this project owns is under 40 lines", check_readme_length, "local"),
     ("every path recomposes to its repository name", check_path_recomposes, "local"),
@@ -469,7 +523,11 @@ CHECKS = [
 # nothing -- see the Checks section of CLAUDE.md.
 BREAKAGE = {
     "every path the README names exists": ("r", "misc/scripts/check_docs.py", "misc/scripts/nope_docs.py"),
-    "README counts match the manifest": ("r", "45 projects across 5", "44 projects across 5"),
+    "README counts match the manifest": ("r", "46 projects across 5", "45 projects across 5"),
+    # Moving the self-entry to a named directory is the drift this catches: `fabric` still
+    # recomposes and still passes every other check, so nothing else notices the root went
+    # missing. That is exactly how the repository escaped its own licence gate.
+    "the manifest checks itself out": ("m", 'path="." remote', 'path="fabric" remote'),
     # Breaking the count word rather than a row: the row comparison would catch a
     # changed revision anyway, and the word is the half that had no control at all.
     "README revision exceptions match the manifest": ("r", "The six that do not", "The five that do not"),

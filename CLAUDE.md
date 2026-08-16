@@ -242,7 +242,7 @@ by a control that reported its own pattern had gone dead. Only the third one fou
 Forty lines is about one screen. Past that a README stops being read from the top, and
 the part nobody reads is the part that goes stale with nobody noticing — which is the
 failure the rest of this section exists to prevent. A short README also has nowhere to
-hide a duplicate: `fabric-harness` states that a decision written twice drifts and the
+hide a duplicate: `contract-bus` states that a decision written twice drifts and the
 stale copy still reads as authoritative, and ten or more READMEs in this workspace
 repeated the `Weft` moduledoc's definitions until RFD 0111 pulled them out.
 

@@ -1,6 +1,6 @@
 # fabric
 
-A [repo](https://gerrit.googlesource.com/git-repo) manifest for the gyre dependencies: 45 projects across 5 GitHub orgs, from one command.
+A [repo](https://gerrit.googlesource.com/git-repo) manifest for the gyre dependencies: 46 projects across 5 GitHub orgs, from one command.
 
 ## Setup
 
@@ -36,4 +36,4 @@ python3 misc/scripts/check_docs.py --self-test  # plus: break each claim, requir
 prek run --all-files                            # the offline subset, wired as a hook
 ```
 
-Twelve checks, each with a negative control. `CLAUDE.md` says why.
+Thirteen checks, each with a negative control. `CLAUDE.md` says why.
