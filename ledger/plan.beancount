@@ -1,11 +1,14 @@
 ;; The plan. Hand-authored, unlike delivery.beancount, which git generates.
 ;;
-;; PERT lives here rather than in a document because a document goes stale and
-;; nothing notices: OPEN_GAPS.md carried 231/234 for eight weeks after the code
-;; reached 1360/1360, and two planning documents inherited the number without
-;; re-deriving it. A task here is a transaction, its estimate is metadata, and
-;; `ledger.py path` computes the critical path from the dependencies rather than
-;; from a picture somebody drew.
+;; Only two things are planned: the first task and the last. Everything between
+;; them is guesswork about a state nobody has observed yet, and writing it down
+;; makes it look decided -- which is how OPEN_GAPS.md carried 231/234 for eight
+;; weeks after the code reached 1360/1360, and how two planning documents
+;; inherited that number without re-deriving it. The next first task is chosen
+;; when this one closes and the state is known.
+;;
+;; Accomplished tasks stay, marked `done`, so the file records what closed rather
+;; than only what is left. `ledger.py path` skips them.
 ;;
 ;; Estimates are three-point, te = (o + 4m + p) / 6, with o and p at the 1st and
 ;; 99th percentile -- the range the Daniels fit memo argues for and the F-35 uses.
@@ -16,9 +19,8 @@
 ;; empirical 1st and 99th percentiles of the 5-9 bucket are its smallest and
 ;; largest observations, one session each, and reading a plan off a single
 ;; observation is how a p99 comes out narrower than the truth. The posterior
-;; predictive carries the uncertainty about the parameters as well as the spread,
-;; and is wider wherever the evidence is thin -- 25.52 h against an empirical
-;; 14.09 h for a 5-9 commit task.
+;; predictive carries uncertainty about the parameters as well as the spread, and
+;; is wider wherever the evidence is thin -- 25.52 h against an empirical 14.09 h.
 ;;
 ;; One modelling choice dominates the answer and so is stated rather than buried.
 ;; A session's cost is the span from its first commit to its last, which excludes
@@ -37,6 +39,12 @@ option "operating_currency" "HOURS"
 2026-08-16 open Expenses:Plan:Mesh     HOURS
 2026-08-16 open Liabilities:Remaining  HOURS
 
+;; The last task. Not estimated: it is the condition that closes the thread, and a
+;; number against it would be a guess about work that has not been scoped.
+2026-08-16 event "deliverable" "A player draws a closed curve in VR, gets a mesh back, and the mesh is correct by a check that can fail"
+
+;; The first task. 98% likely to fit inside one eight-hour day, which is why it is
+;; the whole of today's plan; P0 -> E is 94.4% and the full chain 68.8%.
 2026-08-16 * "plan" "P0 link geogram on macOS"
   task: "P0"
   depends: ""
@@ -46,36 +54,11 @@ option "operating_currency" "HOURS"
   Expenses:Plan:Mesh    2.37 HOURS
   Liabilities:Remaining
 
-2026-08-16 * "plan" "E run run-pipeline against data/hat.json once"
-  task: "E"
-  depends: "P0"
-  optimistic: 0.06
-  likely: 0.81
-  pessimistic: 10.91
-  Expenses:Plan:Mesh    2.37 HOURS
-  Liabilities:Remaining
-
-2026-08-16 * "plan" "A oracle to C++ mesh differential gate"
-  task: "A"
-  depends: "E"
-  optimistic: 0.30
-  likely: 2.77
-  pessimistic: 25.52
-  Expenses:Plan:Mesh    6.15 HOURS
-  Liabilities:Remaining
-
-2026-08-16 * "plan" "B boundary triangulation completeness"
-  task: "B"
+;; Accomplished. Hours for these are in delivery.beancount, booked from git.
+2026-08-16 * "plan" "L0 book the hours and fail the build when the deliverable does not move"
+  task: "L0"
   depends: ""
-  optimistic: 0.30
-  likely: 2.77
-  pessimistic: 25.52
-  Expenses:Plan:Mesh    6.15 HOURS
-  Liabilities:Remaining
-
-2026-08-16 * "plan" "G clusterIncidence float determinism"
-  task: "G"
-  depends: ""
+  done: 2026-08-16
   optimistic: 0.30
   likely: 2.77
   pessimistic: 25.52
