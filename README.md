@@ -14,8 +14,35 @@ repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric
 repo sync -j8                     # clone every project named in default.xml
 ```
 
-`repo init` checks this repo out into `.repo/manifests` and places the children beside it in
-the workspace root. Nothing is vendored here.
+`repo init` checks this repo out into `.repo/manifests` and places the children in the
+directories `default.xml` gives them. Nothing is vendored here.
+
+## Layout
+
+RFD 0111 gives this stack six words that name a position in the code, so the workspace is one
+hexagon and the numbered directories are its sides:
+
+```
+1-transport/    the input that triggers an interactor
+2-contract/     what a transport layer and an interactor compose against
+3-interactor/   a process that performs actions on entities
+4-entities/     the simulated things, and the actions on them
+5-repository/   an interface that gets, creates, and changes entities
+6-datasource/   an implementation of a repository
+service/        the sets of interactors that share a ring
+lean/           the Lean workspaces RFD 0111 does not classify
+vendor/         the git repositories of another organisation
+doc/            the manuals
+```
+
+The numbers carry the ring order, which the alphabet loses. A listing prints the driving side
+first, the inside in the middle, and the driven side last, so the rule that all dependencies
+point inward reads as "every side points at 3 and 4". Sides 2 and 5 hold no project in this
+dependency set yet.
+
+Each project's `path` decides its directory and no name changes: `transport-gateway` on GitHub
+is `1-transport/gateway` on disk. A project RFD 0111 gives no type stays at the workspace root,
+because a guess here would state a type that is not the project's.
 
 ## Use
 
