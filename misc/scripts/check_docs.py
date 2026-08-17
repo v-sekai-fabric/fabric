@@ -647,7 +647,7 @@ BREAKAGE = {
         "m", '<project name="transport-asset"', '<project name="fabric" path="." remote="v-sekai-multiplayer-fabric" revision="main" />\n  <project name="transport-asset"'),
     # Breaking the count word rather than a row: the row comparison would catch a
     # changed revision anyway, and the word is the half that had no control at all.
-    "README revision exceptions match the manifest": ("r", "The six that do not", "The five that do not"),
+    "README revision exceptions match the manifest": ("r", "The seven that do not", "The six that do not"),
     "every project states remote and revision": ("m", ' remote="meshula" revision="dev"', ""),
     "<default> sets sync-j so fetches are not serial": ("m", '<default sync-j="16" />', "<default />"),
     "every manifest revision exists on its remote": ("m", 'revision="dev"', 'revision="no-such-xyz"'),
