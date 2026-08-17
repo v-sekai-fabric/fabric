@@ -259,7 +259,20 @@ OUR_REMOTE = "v-sekai-multiplayer-fabric"
 # we are entitled to change, and admin rights are a poor proxy for permission -- five
 # V-Sekai repositories, one on taskweft and one on meshula were renamed from here earlier
 # today on exactly that reasoning, which is the mistake this exists to stop repeating.
-ALLOWED_ORGS = {"v-sekai-multiplayer-fabric", "v-sekai-fire", "fire"}
+#
+# `taskweft` is on the list because it is ours, stated by its owner rather than inferred from
+# the admin bit that is sitting right there. That is the distinction the paragraph above is
+# about: what put it here is the sentence, not the permission. `taskweft/nif` is a first-party
+# repository and not a fork, which is worth writing down because its name reads like one.
+#
+# `sinew-mocap`, `weftspun`, `lattice-world-weft`, `weftfit`, `chibifire-characters` and
+# `chibifire-stages` are here on the same sentence from the same owner. No project in this
+# manifest sits on any of them yet, so none of those entries decides anything today. They are
+# written now so that the day a project arrives from one, the answer is already on the page
+# instead of being read off the admin bit in a hurry.
+ALLOWED_ORGS = {"v-sekai-multiplayer-fabric", "v-sekai-fire", "fire", "taskweft",
+                "sinew-mocap", "weftspun", "lattice-world-weft", "weftfit",
+                "chibifire-characters", "chibifire-stages"}
 
 # Projects outside those organisations, each with whose they are. An entry here is a
 # statement that the repository is read-only to this project; a project from an unlisted
@@ -270,7 +283,6 @@ READ_ONLY = {
     "entities-model-explorer": "V-Sekai's 3D model viewer",
     "interactor-sketch": "V-Sekai's Godot CASSIE work",
     "transport-xr-grid": "V-Sekai's VR interaction tool",
-    "interactor-taskweft": "the taskweft organisation's HTN planner",
     "LabRCSF": "Nick Porcino's reference skeleton; we have no admin on it either",
 }
 
