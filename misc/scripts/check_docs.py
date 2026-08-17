@@ -68,32 +68,60 @@ def check_counts(mtext, rtext):
     return bad
 
 
-def check_revision_table(mtext, rtext):
-    """The README lists only the projects that do NOT track the modal branch."""
-    _, _, projects = parse_manifest(mtext)
-    modal = collections.Counter(p["revision"] for p in projects).most_common(1)[0][0]
-    m = re.search(r"Most projects track `(\w[\w.-]*)`", flat(rtext))
-    if not m:
-        return ["README: no 'Most projects track `x`' sentence to check"]
-    bad = []
-    if m.group(1) != modal:
-        bad.append(f"README says most track {m.group(1)}, manifest's modal branch is {modal}")
-    rows = set(re.findall(r"^\| `([\w.-]+)` \| `([^`]+)` \|$", rtext, re.M))
-    actual = {(p["name"], p["revision"]) for p in projects if p["revision"] != modal}
-    bad += [f"README documents {t}, not an exception in the manifest" for t in sorted(rows - actual)]
-    bad += [f"manifest has exception {t}, README omits it" for t in sorted(actual - rows)]
+DEFAULTS_OVERRIDE = None
 
-    # The sentence introducing the table counts its rows in words, and adding a row
-    # does not update it. That went stale once already: the table grew to six while
-    # the prose still said five, and every other check here passed, because they all
-    # compare the rows and none of them reads the number.
-    words = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+
+def _default_branch(org, name):
+    if DEFAULTS_OVERRIDE is not None:
+        return DEFAULTS_OVERRIDE.get(name)
+    r = subprocess.run(["gh", "api", f"repos/{org}/{name}", "--jq", ".default_branch"],
+                       capture_output=True, text=True, timeout=30)
+    return r.stdout.strip() or None if r.returncode == 0 else None
+
+
+def check_revision_table(mtext, rtext):
+    """The README lists the projects tracking something other than their own default branch.
+
+    This compared each revision against the manifest's modal branch, which asked the wrong
+    question. `main` being commonest here is a fact about this manifest, not about any
+    repository in it, so a project whose own default is `gyre` or `legacy` or `master` came
+    out as an exception for agreeing with itself. Six rows, five of which recorded nothing
+    unusual, and the one that did -- a project deliberately parked on a working branch --
+    sat among them unremarked.
+
+    The question worth asking is whether the manifest tracks something the repository does
+    not default to, because that is the case somebody has to have chosen and may need to
+    undo. It costs a call per project, so this is a network check now; it was local when it
+    compared the manifest against itself, which is exactly why it could not see this.
+    """
+    _, remotes, projects = parse_manifest(mtext)
+    bad, actual = [], set()
+    for p in projects:
+        org = (remotes.get(p["remote"]) or "").rsplit("/", 1)[-1]
+        d = _default_branch(org, p["name"])
+        if d is None:
+            bad.append(f"cannot read the default branch of {p['name']}")
+        elif p["revision"] != d:
+            actual.add((p["name"], p["revision"]))
+
+    m = re.search(r"tracks its repository's default branch", flat(rtext))
+    if not m:
+        return bad + ["README: no 'tracks its repository's default branch' sentence to check"]
+    rows = set(re.findall(r"^\| `([\w.-]+)` \| `([^`]+)` \|$", rtext, re.M))
+    bad += [f"README documents {x}, which tracks its own default" for x in sorted(rows - actual)]
+    bad += [f"{x} tracks something other than its default, README omits it"
+            for x in sorted(actual - rows)]
+
+    # The sentence introducing the table counts its rows in words, and adding a row does not
+    # update it. That went stale once already: the table grew while the prose did not, and
+    # every other check passed, because they compare rows and none of them reads the number.
+    words = {"zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
              "seven": 7, "eight": 8, "nine": 9, "ten": 10}
-    n = re.search(r"The (\w+) that do not", flat(rtext))
+    n = re.search(r"The (\w+) that do(?:es)? not", flat(rtext))
     if not n:
         bad.append("README: no 'The <n> that do not' sentence to check")
     elif words.get(n.group(1).lower()) != len(actual):
-        bad.append(f"README says '{n.group(1)}' exceptions, the manifest has {len(actual)}")
+        bad.append(f"README says '{n.group(1)}', the manifest has {len(actual)}")
     return bad
 
 
@@ -653,7 +681,7 @@ def check_licences(mtext, _rtext):
 CHECKS = [
     ("every path the README names exists", check_referenced_paths, "network"),
     ("README counts match the manifest", check_counts, "local"),
-    ("README revision exceptions match the manifest", check_revision_table, "local"),
+    ("README revision exceptions match the manifest", check_revision_table, "network"),
     ("every project states remote and revision", check_explicit_attrs, "local"),
     ("<default> sets sync-j so fetches are not serial", check_sync_j, "local"),
     ("every manifest revision exists on its remote", check_revisions_exist, "network"),
@@ -680,7 +708,11 @@ BREAKAGE = {
         "m", '<project name="transport-asset"', '<project name="fabric" path="." remote="v-sekai-multiplayer-fabric" revision="main" />\n  <project name="transport-asset"'),
     # Breaking the count word rather than a row: the row comparison would catch a
     # changed revision anyway, and the word is the half that had no control at all.
-    "README revision exceptions match the manifest": ("r", "The seven that do not", "The six that do not"),
+    # Comparing against live default branches cannot be perturbed by editing a file here,
+    # so the control replaces the answer: a repository claiming to default to what the
+    # manifest already tracks must stop being an exception, and the README must go wrong.
+    "README revision exceptions match the manifest": (
+        "b", {"datasource-foundationdb": "portability-consensus"}),
     "every project states remote and revision": ("m", ' remote="meshula" revision="dev"', ""),
     "<default> sets sync-j so fetches are not serial": ("m", '<default sync-j="16" />', "<default />"),
     "every manifest revision exists on its remote": ("m", 'revision="dev"', 'revision="no-such-xyz"'),
@@ -739,12 +771,15 @@ def main():
     if self_test:
         print("\nnegative controls (each check must fail on broken input):")
         global DOC_OVERRIDE, PAGES_OVERRIDE, LEDGER_OVERRIDE, SEPARATION_OVERRIDE, DAY_OVERRIDE
+        global DEFAULTS_OVERRIDE
         for label, fn, _kind in selected:
             spec = BREAKAGE[label]
             m2, r2 = mtext, rtext
             DOC_OVERRIDE = PAGES_OVERRIDE = LEDGER_OVERRIDE = None
-            SEPARATION_OVERRIDE = DAY_OVERRIDE = None
-            if spec[0] == "d2":
+            SEPARATION_OVERRIDE = DAY_OVERRIDE = DEFAULTS_OVERRIDE = None
+            if spec[0] == "b":
+                DEFAULTS_OVERRIDE = spec[1]
+            elif spec[0] == "d2":
                 DAY_OVERRIDE = spec[1]
             elif spec[0] == "s":
                 SEPARATION_OVERRIDE = spec[1]
@@ -778,6 +813,7 @@ def main():
                 LEDGER_OVERRIDE = None
                 SEPARATION_OVERRIDE = None
                 DAY_OVERRIDE = None
+                DEFAULTS_OVERRIDE = None
             if broke:
                 print(f"ok    {label} fails on broken input")
             else:
