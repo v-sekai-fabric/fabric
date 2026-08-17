@@ -992,7 +992,7 @@ CHECKS = [
 # nothing -- see the Checks section of CLAUDE.md.
 BREAKAGE = {
     "every path the README names exists": ("r", "misc/scripts/check_docs.py", "misc/scripts/nope_docs.py"),
-    "README counts match the manifest": ("r", "45 projects across 5", "44 projects across 5"),
+    "README counts match the manifest": ("r", "47 projects across 5", "46 projects across 5"),
     # Re-adding the self-entry is the defect, so the control adds one.
     "no project checks this repository out twice": (
         "m", '<project name="transport-asset"', '<project name="fabric" path="." remote="v-sekai-multiplayer-fabric" revision="main" />\n  <project name="transport-asset"'),
