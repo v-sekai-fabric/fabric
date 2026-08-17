@@ -411,8 +411,20 @@ question and the one that was never asked.
 - The seconds are **booked**, in `ledger/spent/`, generated from git by
   `misc/scripts/ledger.py` and never typed. A session is a run of commits with no gap over
   four hours, and its cost is the span from its first commit to its last.
-- **A month that books less than one small session to the deliverable fails the build.**
-  `check_deliverable_moved` is that gate, at 4176 s over thirty days.
+- **Gate on what is false now, not on what was not done.** A gate that fails because nobody
+  worked on something is reporting an intention back to the person who had it, and an
+  intention cannot be falsified — only missed. `check_deliverable_moved` did that and is
+  gone. What replaced it are present-tense facts with files behind them: an oracle's
+  recorded output is byte-identical to its own reference, so a differential over the pair
+  cannot fail; and `CHANGELOG.md` forbids `@[extern]` while two Lean files declare one.
+  Both are red today for reasons a reader can check in a minute, and both go green when the
+  work is done rather than when enough seconds are booked.
+- **A README does not list its own directories.** `ls` answers that correctly forever; a
+  listing in prose answers it as of whenever somebody last looked, and nothing compares the
+  two. Detection is grounded in the filesystem — a fence counts as a listing when two or
+  more lines open with a token naming a directory that exists — and reads only unlanguaged
+  fences, because `cmake -S . -B build` in a `sh` block tripped it against the `cmake/`
+  directory before the language was read.
 - The **plan lives in the ledger too**, in `ledger/planned.beancount`: a task is a
   transaction, its three points are metadata, and `ledger.py path` computes the critical
   path from the dependencies rather than from a picture somebody drew.
