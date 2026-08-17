@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Connection-Fsm  SECONDS
   abstract: "Lean 4 + Plausible model of the V-Sekai multiplayer fabric's client-server connection lifecycle. Formally pins the ghost-client bug: a client dropped by the server's liveliness window keeps a stale identity and never re-"
+  cff-commit: "3d594197e861b2fba5af9ab60cc0d66189ec71fc"
+  cff-copied: "2026-06-25T16:03:07Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-06-12

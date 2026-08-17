@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Lean-Shared  SECONDS
   abstract: "Lean 4 library of shared primitive types — BoundingBox, scene geometry, numeric scaffolding — used as the common vocabulary across every multiplayer-fabric hexagon. Depends only on Lean 4 Init with no external libraries,"
+  cff-commit: "4e7aacdb9f961de4c811fbe95690cef4081028c2"
+  cff-copied: "2026-06-25T16:03:31Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-04-19

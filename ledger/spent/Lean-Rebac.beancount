@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Lean-Rebac  SECONDS
   abstract: "Lean 4 formal model of relationship-based access control (ReBAC) for the V-Sekai multiplayer fabric. The production NoGod core is Mathlib-free and dependency-free; the research tier adds Mathlib-backed completeness proof"
+  cff-commit: "408b6d55ec6fcc5d925b1c8ad6d53a95cbbf2477"
+  cff-copied: "2026-06-25T16:03:28Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-04-19

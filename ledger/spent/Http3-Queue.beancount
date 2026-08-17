@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Http3-Queue  SECONDS
   abstract: "Lean 4 + Plausible model of the V-Sekai multiplayer fabric's HTTP/3 inbound packet queue. Proves that an atomic (locked) push/pop discipline preserves the invariant size == nodes.length across all concurrent schedules, s"
+  cff-commit: "4c76b3a709d280b2bcac4fe296f7acde996dbe5c"
+  cff-copied: "2026-06-25T20:07:12Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-06-12

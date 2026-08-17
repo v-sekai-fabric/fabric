@@ -3,6 +3,8 @@
 ;; what the work was and what may be done with it without opening the repo.
 
 2017-12-17 open Expenses:Other:Parsec  SECONDS
+  cff-commit: "62cfbdc003ab4a73bef6d8a26310e5f580c83e55"
+  cff-copied: "2026-08-12T12:52:50-07:00"
   cff-version: "1.2.0"
   first-commit: 2026-08-12
   license: "MIT"

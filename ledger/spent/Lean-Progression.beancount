@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Lean-Progression  SECONDS
   abstract: "Lean 4 + Plausible source-of-truth for the V-Sekai multiplayer fabric's player progression system. Models the credit ledger, affinity gate (must reach threshold before purchasing an art), art collection (no duplicates), "
+  cff-commit: "9581c8509175c8057ae74e6b16b4885ae85bb2e3"
+  cff-copied: "2026-06-25T16:03:24Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-06-12

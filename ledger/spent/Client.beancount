@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Client  SECONDS
   abstract: "A Godot XR client for one zone of the V-Sekai multiplayer fabric. It opens a WebTransport session to fabric-physics-service, decodes back-to-back 100-byte XRGridEntityPacket slices into props and remote avatars, interpol"
+  cff-commit: "828341861642e6ea8741a3a6343530f28ba74492"
+  cff-copied: "2026-08-12T07:25:32-07:00"
   cff-version: "1.2.0"
   date-released: 2026-08-12
   first-commit: 2026-08-12

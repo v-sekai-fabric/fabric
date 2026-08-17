@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Ward  SECONDS
   abstract: "A server-authoritative networked physics service for one zone of the V-Sekai multiplayer fabric, after Glenn Fiedler's networked physics in virtual reality with the authority moved to the server. A ward is a SQLite datab"
+  cff-commit: "a7ffb003fc3be749e272be1f54c7ef54671e28dd"
+  cff-copied: "2026-08-12T06:50:28-07:00"
   cff-version: "1.2.0"
   date-released: 2026-08-12
   first-commit: 2026-08-11

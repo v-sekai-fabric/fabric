@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Wt  SECONDS
   abstract: "A Python WebTransport client and server, built on aioquic, used to test the Godot HTTP/3 and WebTransport implementation in fabric-godot-core by swapping roles. It exists because two ends of one implementation agree with"
+  cff-commit: "fbfaffc4fdada4d917e85b046db04f3abbfe914f"
+  cff-copied: "2026-08-12T09:43:36-07:00"
   cff-version: "1.2.0"
   date-released: 2026-08-12
   first-commit: 2026-08-12
