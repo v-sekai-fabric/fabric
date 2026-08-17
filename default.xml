@@ -61,8 +61,14 @@
        rather than a player one, which changes the protocol and nothing else. -->
   <project name="transport-asset" path="1-transport/asset" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-fanout" path="1-transport/fanout" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-gateway" path="1-transport/gateway" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-ingest" path="1-transport/ingest" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <!-- Two implementations of one contract, and the language is what tells them apart. RFD 0123
+       takes the unqualified names away from the C pair for that reason: a name that says which
+       of two it is beats a name that implies the other is a variant. The C pair carries player
+       traffic; the Python pair carries none and exists to disagree with it. -->
+  <project name="transport-gateway-c" path="1-transport/gateway-c" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-ingest-c" path="1-transport/ingest-c" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-gateway-python" path="1-transport/gateway-python" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-ingest-python" path="1-transport/ingest-python" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-client" path="1-transport/client" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-godot-mcp" path="1-transport/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-blender-mcp" path="1-transport/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
