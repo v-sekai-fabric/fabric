@@ -8,11 +8,7 @@ repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric && repo sync -
 
 ## The layout
 
-`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered directories are its sides; that file's opening comment names all six. This repository is not among them — `repo init` clones it to `.repo/manifests` and reads the manifest from there, so edit it in that checkout. Every project states its own `remote` and `revision`, so one that omits either fails at `repo init` rather than inheriting a default. Every project tracks its repository's default branch. The one that does not:
-
-| project | revision |
-|---|---|
-| `datasource-foundationdb` | `portability-consensus` |
+`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered directories are its sides; that file's opening comment names all six. This repository is not among them — `repo init` clones it to `.repo/manifests` and reads the manifest from there, so edit it in that checkout. Every project states its own `remote` and `revision`, so one that omits either fails at `repo init` rather than inheriting a default. Every project tracks its repository's default branch. The zero that do not would be listed here, and the check that keeps this sentence true asks GitHub rather than the manifest.
 
 ## The ledger
 
