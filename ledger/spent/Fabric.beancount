@@ -35,9 +35,9 @@
   Expenses:Fabric:Fabric                   20771 SECONDS
   Income:Sessions
 
-2026-08-17 * ".repo/manifests" "Split the plan per project, and pin each copied citation to its commit (#40)"
+2026-08-17 * ".repo/manifests" "Answer from the checkout, and split the checks that cannot (#47)"
   spent: TRUE
-  commits: 3
-  steps: "Book hours by author, and let the ledger see the workspace again (#38) | One book per project, in SI seconds, carrying each project's citation (# | Split the plan per project, and pin each copied citation to its commit ("
-  Expenses:Fabric:Fabric                   10770 SECONDS
+  commits: 10
+  steps: "Book hours by author, and let the ledger see the workspace again (#38) | One book per project, in SI seconds, carrying each project's citation (# | Split the plan per project, and pin each copied citation to its commit ( | A day cannot book more seconds than a day holds (#41) | Compare each revision against its own repository's default, not the moda | Empty the revision-exceptions table, because there are none left (#43) | Hold the mirror list to what GitHub calls a fork (#44) | Gate on what is false now, not on what was not done (#45) | A gate states an invariant; a defect goes in the issue tracker (#46) | Answer from the checkout, and split the checks that cannot (#47)"
+  Expenses:Fabric:Fabric                   19308 SECONDS
   Income:Sessions

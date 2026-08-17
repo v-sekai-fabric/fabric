@@ -32,7 +32,7 @@
   spent: TRUE
   commits: 22
   steps: "Amend the curve entry: we were not running the curve we measured | Merge pull request #11 from v-sekai-multiplayer-fabric/price-the-island- | Re-vendor spatial-oracle with the corrected Hilbert inverse | Squashed 'thirdparty/spatial-oracle/' changes from d55e799..2bc58d8 | Re-vendor spatial-oracle with the corrected Hilbert inverse | Merge pull request #12 from v-sekai-multiplayer-fabric/revendor-the-corr | Record what is settled about the topology, and what is not | Model the rollback that escapes O(N), and find it does not pay | Correct the rollback numbers, answer the crossover question, split the l | Cost the clustered forms, and find two of them are the same topology | Sweep bandwidth and CPU together, and find neither one binds | Review LightSpeed's XPR model for loopholes, and correct two readings of | Re-measure the sleep flag, and find the window was the whole result | Film the "
-  Expenses:Other:Ward                       7850 SECONDS
+  Expenses:Other:Ward                       7644 SECONDS
   Income:Sessions
 
 2026-08-16 * "3-interactor/ward" "Merge pull request #17 from v-sekai-multiplayer-fabric/fix-stale-names"
