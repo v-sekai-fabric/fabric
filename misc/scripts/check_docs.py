@@ -177,14 +177,24 @@ README_MAX = 40
 # own, so the limit does not reach one. Each entry states the evidence rather than an
 # opinion: two carry GitHub's fork flag, and the third carries upstream's own README.
 MIRRORS = {
-    # This project owns the Windows builds here and none of the code, so the README
-    # is upstream's to write. GitHub carries the fork flag.
+    # This project owns the Windows builds here and none of the code, so the README is
+    # upstream's to write. GitHub carries the fork flag for both of these.
     "datasource-foundationdb": "apple/foundationdb",
     "idtx-flow": "Immersive-Data-Center-Management/idtx-flow",
     # No fork flag, and the README is still upstream's: it opens "# Godot Engine" and
     # links godotengine.org nineteen times.
     "entities-godot": "godotengine/godot",
 }
+
+# The one entry GitHub does not back. A fork made by pushing an existing history rather
+# than by pressing the button carries no fork flag and no parent, so the evidence has to be
+# stated instead of fetched -- and stating it is the point: an exemption with a reason can
+# be argued with, and a list nobody can check is a list that grows.
+UNFLAGGED_MIRRORS = {
+    "entities-godot": "no fork flag; its README opens '# Godot Engine' and links "
+                      "godotengine.org nineteen times",
+}
+FORKS_OVERRIDE = None
 OUR_REMOTE = "v-sekai-multiplayer-fabric"
 
 # Names that are not this repository's to change, so recomposition gives way rather than
@@ -293,6 +303,49 @@ def check_manifest_does_not_check_itself_out(mtext, _rtext):
     return [f'{p["name"]} takes path=".", which gives repo a second working copy of this '
             "repository at the workspace root; edits there are ignored and then overwritten"
             for p in projects if p["path"] == "."]
+
+
+def check_mirror_list_matches_github(mtext, _rtext):
+    """The list of repositories whose README is upstream's MUST match what GitHub reports.
+
+    MIRRORS exempts a repository from the forty-line rule and from the licence check,
+    because its README belongs to whoever wrote the code. That is a real exemption and a
+    hand-kept list, which is the combination that rots: a fork added later keeps being
+    measured against a rule that does not apply to it, and an entry that stops being a fork
+    keeps an exemption it no longer earns.
+
+    So the list is held to the fact. Every repository GitHub flags as a fork must be in it,
+    with the parent GitHub names; every entry must be a flagged fork or carry a written
+    reason in UNFLAGGED_MIRRORS. Two of the three are flagged -- datasource-foundationdb
+    from apple/foundationdb and idtx-flow from Immersive-Data-Center-Management -- and the
+    third is a history pushed rather than a button pressed, which GitHub cannot see.
+    """
+    _, remotes, projects = parse_manifest(mtext)
+    bad = []
+    for p in projects:
+        if p["remote"] != OUR_REMOTE:
+            continue
+        org = (remotes.get(p["remote"]) or "").rsplit("/", 1)[-1]
+        if FORKS_OVERRIDE is not None:
+            fork, parent = FORKS_OVERRIDE.get(p["name"], (False, None))
+        else:
+            r = subprocess.run(["gh", "api", f"repos/{org}/{p['name']}",
+                                "--jq", '[.fork, .parent.full_name // ""] | @tsv'],
+                               capture_output=True, text=True, timeout=30)
+            if r.returncode != 0:
+                bad.append(f"cannot read whether {p['name']} is a fork")
+                continue
+            cols = (r.stdout.strip().split("\t") + [""])[:2]
+            fork, parent = cols[0] == "true", cols[1] or None
+        if fork and p["name"] not in MIRRORS:
+            bad.append(f"{p['name']} is a fork of {parent}, and is not exempted as a mirror")
+        elif fork and parent and MIRRORS[p["name"]] != parent:
+            bad.append(f"{p['name']} is exempted as a mirror of {MIRRORS[p['name']]}, "
+                       f"but GitHub says its parent is {parent}")
+        elif not fork and p["name"] in MIRRORS and p["name"] not in UNFLAGGED_MIRRORS:
+            bad.append(f"{p['name']} is exempted as a mirror but GitHub does not call it a "
+                       "fork, and no reason is written down")
+    return sorted(bad)
 
 
 def check_gitignore_covers_projects(mtext, _rtext):
@@ -686,6 +739,7 @@ CHECKS = [
     ("<default> sets sync-j so fetches are not serial", check_sync_j, "local"),
     ("every manifest revision exists on its remote", check_revisions_exist, "network"),
     ("no project checks this repository out twice", check_manifest_does_not_check_itself_out, "local"),
+    ("the mirror list matches what GitHub calls a fork", check_mirror_list_matches_github, "network"),
     ("every project directory is gitignored", check_gitignore_covers_projects, "local"),
     ("every README this project owns is under 40 lines", check_readme_length, "local"),
     ("every path recomposes to its repository name", check_path_recomposes, "local"),
@@ -719,6 +773,10 @@ BREAKAGE = {
     # The checkout directory is `path`, so the edit that breaks this check moves the clone
     # out of an ignored directory. Editing the name instead leaves `path` ignored and the
     # check passes, which makes the control certify nothing.
+    # Asking GitHub cannot be perturbed by editing a file here, so the control replaces the
+    # answer: a repository that is a fork and is not on the list must be reported.
+    "the mirror list matches what GitHub calls a fork": (
+        "f", {"transport-asset": (True, "somebody-else/transport-asset")}),
     "every project directory is gitignored": ("m", 'path="4-entities/LabRCSF"', 'path="not-ignored-xyz"'),
     # Padding the README past the limit is the failure this gate exists to catch, and
     # it exercises the same line count the real check reads.
@@ -771,13 +829,15 @@ def main():
     if self_test:
         print("\nnegative controls (each check must fail on broken input):")
         global DOC_OVERRIDE, PAGES_OVERRIDE, LEDGER_OVERRIDE, SEPARATION_OVERRIDE, DAY_OVERRIDE
-        global DEFAULTS_OVERRIDE
+        global DEFAULTS_OVERRIDE, FORKS_OVERRIDE
         for label, fn, _kind in selected:
             spec = BREAKAGE[label]
             m2, r2 = mtext, rtext
             DOC_OVERRIDE = PAGES_OVERRIDE = LEDGER_OVERRIDE = None
-            SEPARATION_OVERRIDE = DAY_OVERRIDE = DEFAULTS_OVERRIDE = None
-            if spec[0] == "b":
+            SEPARATION_OVERRIDE = DAY_OVERRIDE = DEFAULTS_OVERRIDE = FORKS_OVERRIDE = None
+            if spec[0] == "f":
+                FORKS_OVERRIDE = spec[1]
+            elif spec[0] == "b":
                 DEFAULTS_OVERRIDE = spec[1]
             elif spec[0] == "d2":
                 DAY_OVERRIDE = spec[1]
@@ -814,6 +874,7 @@ def main():
                 SEPARATION_OVERRIDE = None
                 DAY_OVERRIDE = None
                 DEFAULTS_OVERRIDE = None
+                FORKS_OVERRIDE = None
             if broke:
                 print(f"ok    {label} fails on broken input")
             else:
