@@ -401,16 +401,23 @@ has a pessimistic case that includes "and then throw it away".
 Ordering work says what to do next. This says whether it happened, which is a different
 question and the one that was never asked.
 
-- The hours are **booked**, in `ledger/spent.beancount`, generated from git by
+- **The unit is the SI second, and each project is its own book.** `ledger/spent/` holds
+  one `.beancount` per project, included by `ledger/spent.beancount`, so a change to one
+  project touches one file and its hours are auditable against `git log` on their own line
+  — a lane total absorbed a dropped commit silently, and a per-project book did not. Each
+  book's `open` directive carries that project's `CITATION.cff`, so it says what the work
+  was and what may be done with it without opening the repository. Seconds because a git
+  timestamp is in seconds: nothing in the file is a conversion anybody has to trust.
+- The seconds are **booked**, in `ledger/spent/`, generated from git by
   `misc/scripts/ledger.py` and never typed. A session is a run of commits with no gap over
   four hours, and its cost is the span from its first commit to its last.
 - **A month that books less than one small session to the deliverable fails the build.**
-  `check_deliverable_moved` is that gate, at 1.16 h over thirty days.
+  `check_deliverable_moved` is that gate, at 4176 s over thirty days.
 - The **plan lives in the ledger too**, in `ledger/planned.beancount`: a task is a
   transaction, its three points are metadata, and `ledger.py path` computes the critical
   path from the dependencies rather than from a picture somebody drew.
 - **Hypothetical and spent never mix, and the tool is what stops them.** Planned work is
-  a liability in `PLANNED-HOURS`; spent work is an expense in `HOURS`. Beancount will not
+  a liability in `PLANNED-SECONDS`; spent work is an expense in `SECONDS`. Beancount will not
   balance across commodities, so netting one against the other fails at parse time with
   exit 1 — the separation is enforced by the format rather than asked for in prose.
   `check_plan_and_spend_are_separate` intersects accounts and units as belt to that braces,

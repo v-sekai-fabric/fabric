@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fabric delivery: git history booked as double-entry hours, checked by bean-check.
+"""Fabric delivery: git history booked as double-entry seconds, checked by bean-check.
 
 Ninety days of commits went 5.3% to the mesh being delivered and 27.2% to documents
 about it, and nobody noticed because nothing counted. A ledger counts. Double entry is
@@ -14,7 +14,7 @@ arrangement `memory.py` has with `usdcat`: the artefact is ours, the validator i
 system's, and the validator is what keeps a hand-written emitter honest.
 
   ledger.py build            git sessions -> ledger/spent.beancount
-  ledger.py report [--since N]   the lane split, as a command rather than a paragraph
+  ledger.py report [--since N] [--by-project]   the split, in seconds
   ledger.py path             the critical path, computed from ledger/planned.beancount
   ledger.py verify           bean-check, then regeneration must be byte-identical
 """
@@ -45,6 +45,7 @@ def _workspace_root():
         return ROOT.parent.parent
     return ROOT
 SPENT = ROOT / "ledger" / "spent.beancount"
+SPENT_DIR = ROOT / "ledger" / "spent"
 PLANNED = ROOT / "ledger" / "planned.beancount"
 
 # A gap longer than this means somebody went away rather than worked slowly. Same
@@ -99,11 +100,11 @@ def _checkouts():
 
 
 def _allocate():
-    """Hours allocated across checkouts with no overlap, as (day, repo) -> (hours, subjects).
+    """Seconds allocated across checkouts with no overlap, as (day, repo) -> (seconds, subjects).
 
     Summing each repository's sessions double-counts. Work moves between repositories inside
     one sitting, so their spans are concurrent, and adding them charged 2026-08-16 with
-    40.04 hours -- a figure no day contains. Accounting has a name for the fix and it is
+    144,144 seconds -- a figure no day contains. Accounting has a name for the fix and it is
     allocation: there is one pool of time, and it is apportioned rather than added.
 
     The pool is every interval between consecutive commits anywhere in the workspace, and
@@ -135,17 +136,91 @@ def _allocate():
             except ValueError:
                 pass
     events.sort()
-    hours = collections.Counter()
+    seconds = collections.Counter()
     steps = collections.defaultdict(list)
-    for (t0, _, _), (t1, rel, subj) in zip(events, events[1:]):
-        day = datetime.datetime.utcfromtimestamp(t1).date().isoformat()
-        gap = t1 - t0
-        if 0 < gap <= SESSION_GAP_H * 3600:
-            hours[(day, rel)] += gap / 3600.0
+    # Every commit is recorded; only the intervals between them are charged. Walking pairs
+    # alone dropped whichever commit sorted first, because it is never the later half of a
+    # pair -- one commit missing out of 564, which is exactly the kind of error a lane total
+    # absorbs without trace and a per-project book does not.
+    prev = None
+    for ct, rel, subj in events:
+        day = datetime.datetime.utcfromtimestamp(ct).date().isoformat()
         steps[(day, rel)].append(subj)
+        if prev is not None:
+            gap = ct - prev
+            if 0 < gap <= SESSION_GAP_H * 3600:
+                seconds[(day, rel)] += float(gap)
+        prev = ct
     for k in steps:
-        hours.setdefault(k, 0.0)
-    return hours, steps
+        seconds.setdefault(k, 0.0)
+    return seconds, steps
+
+
+def _cff(path):
+    """A project's CITATION.cff as beancount metadata, with git filling the gaps.
+
+    A book that says only "Patch-Verify" makes the reader open another repository to learn
+    what it is, what licence it carries and where it lives. CFF already answers that in
+    every repository that has one, so the book carries it: title and abstract for what the
+    work was, licence and repository-code for what may be done with it and where, version
+    and date-released for which state of it these seconds bought.
+
+    Nineteen of forty-six repositories have a CITATION.cff. For the rest git supplies what
+    it can -- the remote and the first commit -- and the absent fields are absent rather
+    than guessed, because a citation invented here would be worse than none.
+    """
+    meta = {}
+    cff = path / "CITATION.cff"
+    if cff.exists():
+        txt = cff.read_text(encoding="utf-8", errors="replace")
+        # A tiny reader for the scalars this needs, so nothing here depends on PyYAML.
+        for key in ("cff-version", "title", "version", "date-released", "license",
+                    "repository-code"):
+            for line in txt.splitlines():
+                if line.startswith(key + ":"):
+                    v = line.split(":", 1)[1].strip().strip('"').strip("'")
+                    if v:
+                        meta[key] = v
+                    break
+        block, abstract = False, []
+        for line in txt.splitlines():
+            if line.startswith("abstract:"):
+                block = True
+                continue
+            if block:
+                if line[:1].isalpha() or not line.strip():
+                    if abstract:
+                        break
+                    continue
+                abstract.append(line.strip())
+        if abstract:
+            meta["abstract"] = " ".join(abstract)
+    r = subprocess.run(["git", "-C", str(path), "remote", "-v"], capture_output=True, text=True)
+    urls = {l.split()[1] for l in r.stdout.splitlines() if len(l.split()) >= 2}
+    if len(urls) == 1 and "repository-code" not in meta:
+        meta["repository-code"] = urls.pop().removesuffix(".git")
+    first = subprocess.run(["git", "-C", str(path), "log", "--reverse", "--pretty=%cs",
+                            "--max-parents=0"], capture_output=True, text=True).stdout.split()
+    if first:
+        meta["first-commit"] = first[0]
+    return meta
+
+
+def _account(rel):
+    """One book per project, hanging off the lane it belongs to.
+
+    A lane on its own is four totals, and a total absorbs an error silently -- the dropped
+    commit above sat inside one for a day. Beancount accounts are hierarchical, so a leaf
+    per project gives both: `bean-query` still rolls Expenses:Delivery:Mesh up for the gate,
+    and every project's own seconds are auditable against `git log` on their own line.
+
+    Account components must start with an uppercase letter, so a path becomes Title-Case
+    and keeps its hyphens: 2-contract/patch-verify is Patch-Verify under 2-Contract.
+    """
+    lane = LANES.get(rel, DEFAULT_LANE)
+    leaf = rel.split("/")[-1] if rel not in (".", ".repo/manifests") else "Fabric"
+    leaf = "-".join(w[:1].upper() + w[1:] for w in leaf.split("-") if w)
+    return f"{lane}:{leaf}" if leaf else lane
 
 
 def _escape(s):
@@ -154,18 +229,30 @@ def _escape(s):
 
 
 def build():
-    hours, steps = _allocate()
-    entries = sorted((day, rel, LANES.get(rel, DEFAULT_LANE), h, len(steps[(day, rel)]),
-                      steps[(day, rel)])
-                     for (day, rel), h in hours.items())
+    """One beancount file per project, and a root that includes them.
 
+    A single file put every project's seconds in one place, so a change to one project
+    rewrote lines belonging to forty-three others and a diff said nothing about which
+    project moved. Beancount's `include` gives the split for free: bean-check reads the
+    root and validates the whole set, while each project's history is its own file with
+    its own git blame.
+
+    The root holds what is common -- the options, the counter-account and the includes --
+    and each project file opens only its own account. Nothing is duplicated between them.
+    """
+    seconds, steps = _allocate()
+    paths = {rel: path for rel, path in _checkouts()}
+    entries = sorted((day, rel, _account(rel), seconds.get((day, rel), 0.0),
+                      len(steps[(day, rel)]), steps[(day, rel)])
+                     for (day, rel) in steps)
     first = entries[0][0] if entries else datetime.date.today().isoformat()
     today = datetime.date.today().isoformat()
-    lines = [
+
+    header = [
         ";; Generated by misc/scripts/ledger.py -- do not edit.",
         ";;",
         ";; SPENT. Every hour below went somewhere; nothing here is an estimate. The",
-        ";; estimates are in planned.beancount, booked as liabilities, and the two files share",
+        ";; estimates are in planned.beancount, booked as liabilities, and the two share",
         ";; no account so that a plan can never read as progress.",
         ";;",
         ";; Time is allocated, not summed. There is one pool -- every interval between",
@@ -173,40 +260,70 @@ def build():
         ";; to the repository whose commit closed it. That makes the charge a partition, so",
         ";; a day totals the union of the active spans rather than the sum of overlapping",
         ";; ones. Adding each repository's own sessions charged 2026-08-16 with 40.04 h,",
-        ";; which no day contains; allocated, the same day costs 8.44 h.",
+        ";; which no day contains; allocated, the same day costs 30,312 s.",
         ";;",
         ";; An interval over four hours is somebody going away rather than working slowly,",
-        ";; and is charged to nobody. So the first commit after a break books nothing, and",
-        ";; the ledger cannot see the work before a session's first commit. That is the",
-        ";; censoring the plan's fifteen-minute floor exists to answer, stated here rather",
-        ";; than corrected: this is a lower bound on effort, not a measurement of it.",
-        "",
-        'option "title" "fabric-spent: hours booked from git sessions"',
-        'option "operating_currency" "HOURS"',
+        ";; and is charged to nobody, so a session's first commit books no time. The ledger",
+        ";; cannot see the work before it either: this is a lower bound on effort.",
+        ";;",
+        ";; Seconds are booked by author, not by repository. A fork holds upstream's commits",
+        ";; and ours, and skipping the whole checkout skipped both.",
         "",
     ]
-    for a in ACCOUNTS:
-        lines.append(f"{first} open {a}  HOURS")
-    lines += ["", f'{today} event "deliverable" "{_escape(DELIVERABLE)}"', ""]
-    for day, rel, lane, hours, n, subjects in entries:
-        # The narration is what the session ended on; `steps` is every commit in it, in
-        # order. A session that books two hours and says only what it finished with tells
-        # you the cost and hides the work, which is the half worth reading later.
-        lines.append(f'{day} * "{_escape(rel)}" "{_escape(subjects[-1])[:88]}"')
-        lines.append(f"  spent: TRUE")
-        lines.append(f"  commits: {n}")
-        steps = " | ".join(_escape(s)[:72] for s in subjects)
-        lines.append(f'  steps: "{steps[:900]}"')
-        lines.append(f"  {lane:<26} {hours:8.2f} HOURS")
-        lines.append(f"  Income:Sessions")
+
+    by_project = collections.defaultdict(list)
+    for e in entries:
+        by_project[e[1]].append(e)
+
+    SPENT_DIR.mkdir(parents=True, exist_ok=True)
+    written, includes = 0, []
+    for rel, rows in sorted(by_project.items()):
+        acct = _account(rel)
+        name = acct.rsplit(":", 1)[-1] + ".beancount"
+        lines = [f";; {rel} -- generated by misc/scripts/ledger.py, do not edit.",
+                 ";; The open directive carries this project's CITATION.cff, so the book says",
+                 ";; what the work was and what may be done with it without opening the repo.",
+                 "", f"{first} open {acct}  SECONDS"]
+        for k, v in sorted(_cff(paths[rel]).items()):
+            if k in ("date-released", "first-commit"):
+                lines.append(f"  {k}: {v}")
+            else:
+                lines.append(f'  {k}: "{_escape(str(v))[:220]}"')
         lines.append("")
-    SPENT.parent.mkdir(parents=True, exist_ok=True)
-    SPENT.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
-    return len(entries)
+        for day, _rel, account, secs, n, subjects in rows:
+            lines.append(f'{day} * "{_escape(rel)}" "{_escape(subjects[-1])[:88]}"')
+            lines.append("  spent: TRUE")
+            lines.append(f"  commits: {n}")
+            steps_s = " | ".join(_escape(s)[:72] for s in subjects)
+            lines.append(f'  steps: "{steps_s[:900]}"')
+            lines.append(f"  {account:<34} {secs:11.0f} SECONDS")
+            lines.append("  Income:Sessions")
+            lines.append("")
+        (SPENT_DIR / name).write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+        includes.append(f'include "spent/{name}"')
+        written += 1
+
+    root = header + [
+        'option "title" "fabric-spent: seconds booked from git sessions"',
+        'option "operating_currency" "SECONDS"',
+        "",
+        f"{first} open Income:Sessions  SECONDS",
+        "",
+        f'{today} event "deliverable" "{_escape(DELIVERABLE)}"',
+        "",
+    ] + sorted(includes)
+    SPENT.write_text("\n".join(root).rstrip() + "\n", encoding="utf-8")
+    # Files that no longer correspond to a project would keep being included by hand and
+    # validated forever; a generated tree must be able to shrink.
+    keep = {i.split('"')[1].split("/")[-1] for i in includes}
+    for f in SPENT_DIR.glob("*.beancount"):
+        if f.name not in keep:
+            f.unlink()
+    return len(entries), written
 
 
 def _postings(since_days=None):
-    """(date, account, hours) for every expense posting, read back from the file.
+    """(date, account, seconds) for every expense posting, read back from the file.
 
     Read back rather than recomputed, so `report` and the delivery gate answer from the
     artefact that is committed. A number produced by the generator and never read from
@@ -216,7 +333,10 @@ def _postings(since_days=None):
     if since_days is not None:
         cutoff = datetime.date.today() - datetime.timedelta(days=since_days)
     out, day = [], None
-    for line in SPENT.read_text(encoding="utf-8").splitlines():
+    lines = []
+    for f in sorted(SPENT_DIR.glob("*.beancount")):
+        lines += f.read_text(encoding="utf-8").splitlines()
+    for line in lines:
         head = line[:10]
         if len(line) > 11 and line[4] == "-" and line[7] == "-" and " * " in line:
             try:
@@ -225,28 +345,35 @@ def _postings(since_days=None):
                 day = None
         elif line.startswith("  Expenses:") and day is not None:
             acct, _, amt = line.strip().partition(" ")
-            hours = float(amt.replace("HOURS", "").strip())
+            secs = float(amt.replace("SECONDS", "").strip())
             if cutoff is None or day >= cutoff:
-                out.append((day, acct, hours))
+                out.append((day, acct, secs))
     return out
 
 
-def report(since_days):
+def report(since_days, by_project=False):
+    """The lane split, or the project split under it.
+
+    Accounts are hierarchical so a project's seconds roll up to its lane, and the lane is
+    what answers "where did the time go". The leaves answer "which project", which is the
+    question worth asking second and the one that makes a wrong number visible: a lane
+    total absorbed a dropped commit for a day, and a project line would not have.
+    """
     rows = _postings(since_days)
     tot = collections.Counter()
-    for _, acct, hours in rows:
-        tot[acct] += hours
+    for _, acct, secs in rows:
+        tot[acct if by_project else acct.rsplit(":", 1)[0]] += secs
     total = sum(tot.values()) or 1.0
     print(f"  SPENT -- {since_days} days, from {SPENT.relative_to(ROOT)}")
-    for acct, hours in sorted(tot.items(), key=lambda x: -x[1]):
-        print(f"    {acct:<26} {hours:8.2f} h  {hours / total * 100:5.1f}%")
-    print(f"    {'TOTAL':<26} {total:8.2f} h")
+    for acct, secs in sorted(tot.items(), key=lambda x: -x[1]):
+        print(f"    {acct:<34} {secs:11.0f} s  {secs / total * 100:5.1f}%")
+    print(f"    {'TOTAL':<34} {total:11.0f} s")
     return 0
 
 
-def delivery_hours(window_days=30):
-    """Hours booked to the mesh in the trailing window. What the build asks about."""
-    return sum(h for _, a, h in _postings(window_days) if a.startswith("Expenses:Delivery"))
+def delivery_seconds(window_days=30):
+    """Seconds booked to the mesh in the trailing window. What the build asks about."""
+    return sum(s for _, a, s in _postings(window_days) if a.startswith("Expenses:Delivery"))
 
 
 def verify():
@@ -262,11 +389,12 @@ def verify():
             bad += 1
         else:
             print(f"  bean-check ok  {f.name}")
-    before = SPENT.read_text(encoding="utf-8")
+    before = {f.name: f.read_text(encoding="utf-8") for f in sorted(SPENT_DIR.glob("*.beancount"))}
+    before[SPENT.name] = SPENT.read_text(encoding="utf-8")
     build()
-    after = SPENT.read_text(encoding="utf-8")
+    after = {f.name: f.read_text(encoding="utf-8") for f in sorted(SPENT_DIR.glob("*.beancount"))}
+    after[SPENT.name] = SPENT.read_text(encoding="utf-8")
     if before != after:
-        SPENT.write_text(before, encoding="utf-8")
         print("  the ledger is not what git says; it was hand-edited")
         bad += 1
     else:
@@ -385,14 +513,16 @@ def main():
     sub.add_parser("build")
     r = sub.add_parser("report")
     r.add_argument("--since", type=int, default=90)
+    r.add_argument("--by-project", action="store_true", help="one line per project, not per lane")
     sub.add_parser("path")
     sub.add_parser("verify")
     a = p.parse_args()
     if a.cmd == "build":
-        print(f"booked {build()} sessions into {SPENT.relative_to(ROOT)}")
+        n, files = build()
+        print(f"booked {n} sessions into {files} project ledgers under {SPENT_DIR.relative_to(ROOT)}")
         return 0
     if a.cmd == "report":
-        return report(a.since)
+        return report(a.since, a.by_project)
     if a.cmd == "path":
         return path()
     return 1 if verify() else 0
