@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Docs:Manuals  SECONDS
   abstract: "Architecture Decision Records (MADRs) and reference bibliography for the V-Sekai multiplayer fabric, covering WebTransport/QUIC networking, server-authoritative game architecture, interest management, formal verification"
+  cff-commit: "e5bd87754eb86f56dbe6a2c1b20afb44388bd425"
+  cff-copied: "2026-08-07T11:21:58-07:00"
   cff-version: "1.2.0"
   date-released: 2026-06-24
   first-commit: 2026-05-06

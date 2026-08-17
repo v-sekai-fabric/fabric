@@ -47,6 +47,20 @@ def _workspace_root():
 SPENT = ROOT / "ledger" / "spent.beancount"
 SPENT_DIR = ROOT / "ledger" / "spent"
 PLANNED = ROOT / "ledger" / "planned.beancount"
+PLANNED_DIR = ROOT / "ledger" / "planned"
+
+
+def _planned_text():
+    """Every planned book's text, since the tasks live in the per-project files.
+
+    The root holds what is common -- the budget, the deliverable, the includes -- and the
+    tasks sit in the book of the repository each will be done in, matching ledger/spent/.
+    Reading only the root found no tasks at all and `path` failed on an empty sequence,
+    which is the right failure: a plan reader that silently reports no critical path
+    because it looked in the wrong file is worse than one that stops.
+    """
+    return "\n".join(f.read_text(encoding="utf-8")
+                      for f in sorted(PLANNED_DIR.glob("*.beancount")))
 
 # A gap longer than this means somebody went away rather than worked slowly. Same
 # definition the PERT table in CLAUDE.md is derived from, so the two agree by construction.
@@ -168,6 +182,19 @@ def _cff(path):
     Nineteen of forty-six repositories have a CITATION.cff. For the rest git supplies what
     it can -- the remote and the first commit -- and the absent fields are absent rather
     than guessed, because a citation invented here would be worse than none.
+
+    This is a copy, and a copy diverges. The source is the project's own CITATION.cff and
+    it will change without this file changing with it, so every copied block carries
+    `cff-copied`, the datetime its CITATION.cff was last committed. That is stable across
+    rebuilds, unlike the moment of copying, so it does not break the byte-identical check
+    that proves this file is generated -- and it answers the better question: which version
+    of the citation this is. A CITATION.cff committed after that stamp is a copy that has
+    diverged, and the comparison is two timestamps rather than a guess.
+
+    `cff-commit` pins it exactly. With `repository-code` beside it the source is fetchable
+    -- `git show <cff-commit>:CITATION.cff` in that repository returns the bytes this was
+    copied from -- so divergence is not merely detectable but resolvable, which a date on
+    its own does not give you.
     """
     meta = {}
     cff = path / "CITATION.cff"
@@ -203,6 +230,17 @@ def _cff(path):
                             "--max-parents=0"], capture_output=True, text=True).stdout.split()
     if first:
         meta["first-commit"] = first[0]
+    if cff.exists():
+        # The datetime CITATION.cff was last committed, not the moment of the copy. "Now"
+        # would be honest about when the copy ran and would also change on every rebuild,
+        # which breaks the byte-identical regeneration check that proves this file is
+        # generated at all. The source's own commit time is stable, and it answers the
+        # better question anyway: which version of the citation this is. A CITATION.cff
+        # committed after this stamp is a copy that has diverged.
+        r = subprocess.run(["git", "-C", str(path), "log", "-1", "--format=%cI%n%H",
+                            "--", "CITATION.cff"], capture_output=True, text=True).stdout.split()
+        if len(r) == 2:
+            meta["cff-copied"], meta["cff-commit"] = r
     return meta
 
 
@@ -412,7 +450,7 @@ def _plan_tasks():
     with the picture of it, which is how 231/234 outlived the code that reached 1360/1360.
     """
     tasks, cur = {}, None
-    for line in PLANNED.read_text(encoding="utf-8").splitlines():
+    for line in _planned_text().splitlines():
         s = line.strip()
         if s.startswith("task:"):
             cur = s.split('"')[1]
@@ -427,7 +465,7 @@ def _plan_tasks():
             tasks[cur][{"optimistic": "o", "likely": "m", "pessimistic": "p"}[k]] = float(v)
     # The narration carries what the task is; re-read to attach it to the id below it.
     narr = None
-    for line in PLANNED.read_text(encoding="utf-8").splitlines():
+    for line in _planned_text().splitlines():
         s = line.strip()
         if s.startswith("2") and '"plan"' in s:
             narr = s.split('"plan"')[1].strip().strip('"')
@@ -488,17 +526,17 @@ def path(draws=40000):
 
     print(f"  HYPOTHETICAL -- estimates of work not done; nothing here was spent")
     print(f"  critical path  {' -> '.join(longest)}")
-    print(f"    te (sum of three-point)      {span:>7.2f} h")
-    print(f"    50% done by                  {q(.50):>7.2f} h")
-    print(f"    99% done by                  {q(.99):>7.2f} h")
-    print(f"     1% done by                  {q(.01):>7.2f} h")
+    print(f"    te (sum of three-point)   {span:>10.0f} s")
+    print(f"    50% done by               {q(.50):>10.0f} s")
+    print(f"    99% done by               {q(.99):>10.0f} s")
+    print(f"     1% done by               {q(.01):>10.0f} s")
     print()
-    print(f"  {'':<4} {'task':<42} {'o':>6} {'m':>6} {'p':>6} {'te':>6} {'slack':>7}")
+    print(f"  {'':<4} {'task':<38} {'o':>8} {'m':>8} {'p':>8} {'te':>8} {'slack':>8}")
     for tid, t in sorted(tasks.items(), key=lambda x: (x[0] not in oncrit, x[0])):
         on = tid in oncrit
         slack = 0.0 if on else span - sum(tasks[i]["te"] for i in chains[tid])
-        print(f"  {'path' if on else '':<4} {t['what'][:42]:<42} {t['o']:>6.2f} {t['m']:>6.2f} "
-              f"{t['p']:>6.2f} {t['te']:>6.2f} {slack:>7.2f}")
+        print(f"  {'path' if on else '':<4} {t['what'][:38]:<38} {t['o']:>8.0f} {t['m']:>8.0f} "
+              f"{t['p']:>8.0f} {t['te']:>8.0f} {slack:>8.0f}")
     done = [v for v in _plan_tasks().values() if v["done"]]
     if done:
         print()

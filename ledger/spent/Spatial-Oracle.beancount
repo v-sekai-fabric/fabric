@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Spatial-Oracle  SECONDS
   abstract: "Lean 4 O(N+k) Hilbert broadphase for the V-Sekai multiplayer fabric's spatial oracle. Sorts N ghost-expanded AABBs by 30-bit Hilbert code via LSD radix sort, groups into prefix windows, and sweeps with an adaptive inter-"
+  cff-commit: "f7ce8cc069199cdfc9b23e66cbe8ff96b5e5bb57"
+  cff-copied: "2026-06-25T16:04:01Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-04-19

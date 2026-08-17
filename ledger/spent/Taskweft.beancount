@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Taskweft  SECONDS
   abstract: "HTN planner exposing plan/replan over the RECTGTN (Relationship-Enabled Capability-Temporal Goal-Task-Network) model via MCP. C++20 planner core with an Elixir NIF/MCP server layer."
+  cff-commit: "8a668cfa1c352b7df3dfedf777cc2894699284f4"
+  cff-copied: "2026-07-17T05:31:45Z"
   cff-version: "1.2.0"
   date-released: 2026-07-16
   first-commit: 2026-04-19

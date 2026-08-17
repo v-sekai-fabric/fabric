@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Lean-Combat  SECONDS
   abstract: "Lean 4 + Plausible source-of-truth for the V-Sekai multiplayer fabric's combat system. Models the deterministic event reducer (tick / attack / spawn), spawn-invulnerability window, three-stage timed-combo damage schedule"
+  cff-commit: "29a234c8fb888ef3924f5d7d867d64f29c1c322d"
+  cff-copied: "2026-06-25T16:03:03Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-06-12

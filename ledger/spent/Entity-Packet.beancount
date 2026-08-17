@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Entity-Packet  SECONDS
   abstract: "Lean 4 + Plausible source-of-truth for the V-Sekai multiplayer fabric's XRGridEntityPacket: a 100-byte, integer-only wire format carrying global_id, position in absolute micrometers (int64), velocity in fixed-point i16, "
+  cff-commit: "a18651fc0a12282e99ee546decff026894dafc93"
+  cff-copied: "2026-06-25T16:03:10Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-06-12

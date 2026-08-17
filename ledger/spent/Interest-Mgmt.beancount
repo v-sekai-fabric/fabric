@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Interest-Mgmt  SECONDS
   abstract: "Lean 4 formal model of area-of-interest (AOI) management and zone interest routing for the V-Sekai multiplayer fabric. Specifies cross-zone neighbor look-up grounded in lean-spatial-oracle's ZonePartition and interestEnt"
+  cff-commit: "9163e09c068ca23177d6307c76d90f658b042948"
+  cff-copied: "2026-06-25T16:03:17Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-04-19

@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Humanoid-Rom  SECONDS
   abstract: "Lean 4 formal verification of humanoid range-of-motion (ROM), Kusudama joint constraints, and muscle/prismatic constraints (core). Adapters include parsers for B3D and AddBiomechanics formats, a GPU shader, and Python to"
+  cff-commit: "38f90d312802e7ab66c0619f388497019dabae22"
+  cff-copied: "2026-06-25T16:10:26Z"
   cff-version: "1.2.0"
   date-released: 2026-06-24
   first-commit: 2026-04-19

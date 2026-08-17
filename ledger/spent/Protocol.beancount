@@ -4,6 +4,8 @@
 
 2017-12-17 open Expenses:Other:Protocol  SECONDS
   abstract: "Lean 4 formal proofs of V-Sekai multiplayer fabric SLA obligations and protocol correctness properties: round-trip-time bounds, zone handoff invariants, authority-delegation safety, and inter-zone interest-fanout correct"
+  cff-commit: "0baa31af78786947d2e2f8f771a453de0ef33e80"
+  cff-copied: "2026-06-25T16:03:14Z"
   cff-version: "1.2.0"
   date-released: 2026-06-25
   first-commit: 2026-04-19
