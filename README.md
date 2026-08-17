@@ -22,7 +22,7 @@ python3 misc/scripts/ledger.py path                # HYPOTHETICAL, the critical 
 ## Checks
 
 ```sh
-python3 misc/scripts/check_docs.py             # all of them
+python3 misc/scripts/check_docs.py --fast  # the checkout answers these, 0.7s
 python3 misc/scripts/check_docs.py --self-test # each must fail on broken input
 ```
 

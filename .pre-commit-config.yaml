@@ -10,16 +10,16 @@ repos:
   - repo: local
     hooks:
       - id: check-docs
-        name: README claims match the manifest (offline)
-        entry: python3 misc/scripts/check_docs.py --local-only
+        name: what the checkout can answer (0.7s)
+        entry: python3 misc/scripts/check_docs.py --fast
         language: system
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
 
       - id: check-docs-full
-        name: README claims match the manifest and the live remotes
-        entry: python3 misc/scripts/check_docs.py
+        name: repository settings a clone cannot carry
+        entry: python3 misc/scripts/check_docs.py --slow
         language: system
         pass_filenames: false
         always_run: true

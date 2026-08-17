@@ -7,7 +7,8 @@ deliberately broken input and prove it fails there.
 
     python3 misc/scripts/check_docs.py
     python3 misc/scripts/check_docs.py --self-test
-    python3 misc/scripts/check_docs.py --local-only   # commit-time subset; the rest run at pre-push
+    python3 misc/scripts/check_docs.py --fast   # the checkout answers these; runs at commit
+    python3 misc/scripts/check_docs.py --slow   # repository settings only a clone cannot carry
 
 Paths resolve from the repository root, not the working directory, so it runs from anywhere.
 
@@ -95,10 +96,14 @@ def check_revision_table(mtext, rtext):
     compared the manifest against itself, which is exactly why it could not see this.
     """
     _, remotes, projects = parse_manifest(mtext)
+    if DEFAULTS_OVERRIDE is None:
+        got = gh_many({p["name"]: [f"repos/{(remotes.get(p['remote']) or '').rsplit('/', 1)[-1]}"
+                                   f"/{p['name']}", "--jq", ".default_branch"] for p in projects})
+    else:
+        got = {k: DEFAULTS_OVERRIDE.get(k) for k in (p["name"] for p in projects)}
     bad, actual = [], set()
     for p in projects:
-        org = (remotes.get(p["remote"]) or "").rsplit("/", 1)[-1]
-        d = _default_branch(org, p["name"])
+        d = got.get(p["name"]) or None
         if d is None:
             bad.append(f"cannot read the default branch of {p['name']}")
         elif p["revision"] != d:
@@ -151,6 +156,55 @@ def check_sync_j(mtext, _rtext):
     return []
 
 
+def _gh(args):
+    """One `gh api` call, returning stdout or None. The unit the pool below maps over."""
+    r = subprocess.run(["gh", "api"] + list(args), capture_output=True, text=True, timeout=30)
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def gh_many(calls):
+    """Run many `gh api` calls at once, keyed by whatever the caller keys them by.
+
+    Serially, the network checks took three minutes: 80 s to resolve every token in every
+    child document one at a time, 28 s for licences, 23 s for default branches. Each is
+    dozens of independent round trips to the same host, waiting one at a time for no reason
+    -- check_revisions_exist already used a pool and cost 1.6 s for the same shape of work,
+    which is what made the others' cost obvious rather than inevitable.
+
+    Sixteen at a time, which is what `<default sync-j="16">` asks repo for against the same
+    remote, so this is not a new number to tune.
+    """
+    keys = list(calls)
+    with cf.ThreadPoolExecutor(16) as ex:
+        return dict(zip(keys, ex.map(_gh, (calls[k] for k in keys))))
+
+
+def _gh(args):
+    """One `gh api` call, returning stdout or None. The unit the pool below maps over."""
+    r = subprocess.run(["gh", "api"] + list(args), capture_output=True, text=True, timeout=30)
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def gh_many(calls):
+    """Run many `gh api` calls at once, keyed however the caller keys them.
+
+    Serially the network checks took 181 s, nearly all of it waiting: 80 s resolving every
+    token in every child document one at a time, 28 s on licences, 23 s on default branches.
+    check_revisions_exist already used a pool and cost 1.6 s for the same shape of work,
+    which is what made the rest's cost look like a choice rather than a fact.
+
+    Sixteen at a time, which is what `<default sync-j="16">` already asks repo for against
+    the same host, so this is not a new number to tune.
+
+    What belongs here is only what a checkout cannot answer. A repository's licence, its
+    revisions and its current name are all on disk once `repo sync` has run, and asking
+    GitHub for them is a round trip to learn something already local.
+    """
+    keys = list(calls)
+    with cf.ThreadPoolExecutor(16) as ex:
+        return dict(zip(keys, ex.map(_gh, (calls[k] for k in keys))))
+
+
 def check_revisions_exist(mtext, _rtext):
     _, _, projects = parse_manifest(mtext)
     bad = []
@@ -196,6 +250,29 @@ UNFLAGGED_MIRRORS = {
 }
 FORKS_OVERRIDE = None
 OUR_REMOTE = "v-sekai-multiplayer-fabric"
+
+# The organisations this project may write to. Everything else in the manifest is read: its
+# code is checked out, built against and cited, and nothing here pushes a commit, opens a
+# pull request or files an issue against it.
+#
+# The list is short on purpose. A repository we can technically write to is not a repository
+# we are entitled to change, and admin rights are a poor proxy for permission -- five
+# V-Sekai repositories, one on taskweft and one on meshula were renamed from here earlier
+# today on exactly that reasoning, which is the mistake this exists to stop repeating.
+ALLOWED_ORGS = {"v-sekai-multiplayer-fabric", "v-sekai-fire", "fire"}
+
+# Projects outside those organisations, each with whose they are. An entry here is a
+# statement that the repository is read-only to this project; a project from an unlisted
+# organisation fails the check rather than being quietly assumed one way or the other.
+READ_ONLY = {
+    "cassie": "the academic CASSIE project's Unity application, V-Sekai's branch of it",
+    "cassie-data": "the sketch dataset recorded for the CASSIE paper",
+    "entities-model-explorer": "V-Sekai's 3D model viewer",
+    "interactor-sketch": "V-Sekai's Godot CASSIE work",
+    "transport-xr-grid": "V-Sekai's VR interaction tool",
+    "interactor-taskweft": "the taskweft organisation's HTN planner",
+    "LabRCSF": "Nick Porcino's reference skeleton; we have no admin on it either",
+}
 
 # Names that are not this repository's to change, so recomposition gives way rather than
 # forcing a rename. `path` and `name` are independent in repo -- a project sits on its side
@@ -322,20 +399,22 @@ def check_mirror_list_matches_github(mtext, _rtext):
     """
     _, remotes, projects = parse_manifest(mtext)
     bad = []
-    for p in projects:
-        if p["remote"] != OUR_REMOTE:
-            continue
-        org = (remotes.get(p["remote"]) or "").rsplit("/", 1)[-1]
+    ours = [p for p in projects if p["remote"] == OUR_REMOTE]
+    if FORKS_OVERRIDE is None:
+        org = (remotes.get(OUR_REMOTE) or "").rsplit("/", 1)[-1]
+        raw = gh_many({p["name"]: [f"repos/{org}/{p['name']}",
+                                   "--jq", '[.fork, .parent.full_name // ""] | @tsv']
+                       for p in ours})
+    else:
+        raw = None
+    for p in ours:
         if FORKS_OVERRIDE is not None:
             fork, parent = FORKS_OVERRIDE.get(p["name"], (False, None))
         else:
-            r = subprocess.run(["gh", "api", f"repos/{org}/{p['name']}",
-                                "--jq", '[.fork, .parent.full_name // ""] | @tsv'],
-                               capture_output=True, text=True, timeout=30)
-            if r.returncode != 0:
+            if raw.get(p["name"]) is None:
                 bad.append(f"cannot read whether {p['name']} is a fork")
                 continue
-            cols = (r.stdout.strip().split("\t") + [""])[:2]
+            cols = (raw[p["name"]].split("\t") + [""])[:2]
             fork, parent = cols[0] == "true", cols[1] or None
         if fork and p["name"] not in MIRRORS:
             bad.append(f"{p['name']} is a fork of {parent}, and is not exempted as a mirror")
@@ -345,6 +424,36 @@ def check_mirror_list_matches_github(mtext, _rtext):
         elif not fork and p["name"] in MIRRORS and p["name"] not in UNFLAGGED_MIRRORS:
             bad.append(f"{p['name']} is exempted as a mirror but GitHub does not call it a "
                        "fork, and no reason is written down")
+    return sorted(bad)
+
+
+def check_only_allowed_orgs_are_written(mtext, _rtext):
+    """Every project MUST be in an organisation this project may write to, or be read-only.
+
+    Being able to push is not being entitled to. Five V-Sekai repositories, one on taskweft
+    and one on meshula were renamed from here earlier today because `gh api` said admin was
+    true, which is a fact about credentials and not about whose work it is.
+
+    So the manifest states it. A project in one of ALLOWED_ORGS may be changed; anything
+    else has to appear in READ_ONLY with whose it is, and a project from an organisation on
+    neither list fails rather than defaulting to either answer. That makes adding a
+    dependency from somewhere new a decision somebody writes down.
+
+    The check reads the manifest alone and cannot see a push that already happened. It is a
+    statement of what may be done, kept where the projects are listed, not a guard on the
+    wire.
+    """
+    _, remotes, projects = parse_manifest(mtext)
+    bad = []
+    for p in projects:
+        org = (remotes.get(p["remote"]) or "").rsplit("/", 1)[-1]
+        if org in ALLOWED_ORGS:
+            if p["name"] in READ_ONLY:
+                bad.append(f"{p['name']} is in {org}, which is writable, and is also listed "
+                           "read-only; one of the two is wrong")
+        elif p["name"] not in READ_ONLY:
+            bad.append(f"{p['name']} is in {org}, which this project may not write to, and "
+                       "is not listed read-only")
     return sorted(bad)
 
 
@@ -498,8 +607,18 @@ def check_names_resolve(mtext, _rtext):
     live = _org_repo_names()
     if not live:
         return ["cannot list the organisation's repositories"]
-    resolved, bad = {}, []
-    for path, name, text in _child_docs(projects):
+    docs = list(_child_docs(projects))
+    wanted = set()
+    for _path, _name, text in docs:
+        prose = re.sub(r"```.*?```", "", text, flags=re.S)
+        prose = re.sub(rf"github\.com/(?!{re.escape(OUR_REMOTE)}/)[\w.-]+/[\w.-]+", "", prose)
+        for tok in re.findall(r"\b[a-z][a-z0-9]*(?:-[a-z0-9]+){1,4}\b", prose):
+            if tok not in live:
+                wanted.add(tok)
+    got = gh_many({tok: [f"repos/{OUR_REMOTE}/{tok}", "--jq", ".name"] for tok in sorted(wanted)})
+    resolved = {tok: (v or None) for tok, v in got.items()}
+    bad = []
+    for path, name, text in docs:
         # A fenced block is a command or a config, not prose making a claim, and a clone
         # URL that still redirects is somebody's working command line.
         prose = re.sub(r"```.*?```", "", text, flags=re.S)
@@ -510,11 +629,7 @@ def check_names_resolve(mtext, _rtext):
         for tok in sorted(set(re.findall(r"\b[a-z][a-z0-9]*(?:-[a-z0-9]+){1,4}\b", prose))):
             if tok in live:
                 continue
-            if tok not in resolved:
-                r = subprocess.run(["gh", "api", f"repos/{OUR_REMOTE}/{tok}", "--jq", ".name"],
-                                   capture_output=True, text=True, timeout=30)
-                resolved[tok] = r.stdout.strip() if r.returncode == 0 else None
-            if resolved[tok] and resolved[tok] != tok:
+            if resolved.get(tok) and resolved[tok] != tok:
                 bad.append(f"{path}/{name} names {tok}, which is now {resolved[tok]}")
     return sorted(set(bad))
 
@@ -542,12 +657,42 @@ LICENCE_UNSET = {"", "NONE", "NOASSERTION", "null", None}
 LICENCE_OVERRIDE = None
 
 
-def _licence_of(org, name):
+# The first line of the licences this policy cares about, which is what identifies them.
+# GitHub runs a classifier over the file; this reads the file. The answers agree on every
+# repository here, and reading beats asking once the file is already on disk.
+LICENCE_FIRST_LINES = {
+    "MIT License": "MIT",
+    "                                 Apache License": "Apache-2.0",
+    "Mozilla Public License Version 2.0": "MPL-2.0",
+    "                    GNU GENERAL PUBLIC LICENSE": "GPL-2.0",
+    "                    GNU AFFERO GENERAL PUBLIC LICENSE": "AGPL-3.0",
+    "BSD 2-Clause License": "BSD-2-Clause",
+    "BSD 3-Clause License": "BSD-3-Clause",
+}
+
+
+def _licence_of(org, name, path=None):
+    """The SPDX id of a checkout's licence, read from the checkout.
+
+    This asked GitHub, once per repository, and cost 28 seconds of the 181 the network
+    checks took. The file it is asking about is already on disk after `repo sync`, so the
+    round trip bought nothing but latency: past a checkout there is nothing to look up.
+
+    A checkout that is not on disk is skipped rather than fetched, and says so through the
+    caller, because a check that quietly reaches the network to cover a missing checkout is
+    two checks wearing one name.
+    """
     if LICENCE_OVERRIDE is not None:
         return LICENCE_OVERRIDE.get(name, "MIT")
-    out = subprocess.run(["gh", "api", f"repos/{org}/{name}", "--jq", '.license.spdx_id // "NONE"'],
-                         capture_output=True, text=True, timeout=30)
-    return out.stdout.strip() if out.returncode == 0 else "NONE"
+    if path is None:
+        return None
+    for candidate in ("LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"):
+        f = path / candidate
+        if f.exists():
+            head = f.read_text(encoding="utf-8", errors="replace").splitlines()
+            first = next((l.rstrip() for l in head if l.strip()), "")
+            return LICENCE_FIRST_LINES.get(first, f"UNRECOGNISED: {first[:40]}")
+    return "NONE"
 
 
 PAGES_OVERRIDE = None
@@ -770,10 +915,14 @@ def check_pages_names(mtext, _rtext):
     """
     _, _, projects = parse_manifest(mtext)
     bad = []
-    for p in projects:
-        if p["remote"] != OUR_REMOTE:
-            continue
-        url = _pages_url(p["org"], p["name"])
+    ours = [p for p in projects if p["remote"] == OUR_REMOTE]
+    if PAGES_OVERRIDE is None:
+        got = gh_many({p["name"]: [f"repos/{p['org']}/{p['name']}/pages", "--jq", ".html_url"]
+                       for p in ours})
+    else:
+        got = {p["name"]: PAGES_OVERRIDE.get(p["name"]) for p in ours}
+    for p in ours:
+        url = got.get(p["name"]) or None
         if url is None:
             continue
         slug = url.rstrip("/").rsplit("/", 1)[-1]
@@ -805,7 +954,9 @@ def check_licences(mtext, _rtext):
     for p in projects:
         if p["remote"] != OUR_REMOTE or p["name"] in MIRRORS:
             continue
-        lic = _licence_of(org, p["name"])
+        lic = _licence_of(org, p["name"], _workspace_root() / p["path"])
+        if lic is None:
+            continue
         if lic in LICENCE_UNSET:
             bad.append(f"{p['name']} has no licence; default copyright reserves every right")
         elif lic in LICENCE_FORBIDDEN:
@@ -823,13 +974,14 @@ CHECKS = [
     ("<default> sets sync-j so fetches are not serial", check_sync_j, "local"),
     ("every manifest revision exists on its remote", check_revisions_exist, "network"),
     ("no project checks this repository out twice", check_manifest_does_not_check_itself_out, "local"),
+    ("every project is writable by us or listed read-only", check_only_allowed_orgs_are_written, "local"),
     ("the mirror list matches what GitHub calls a fork", check_mirror_list_matches_github, "network"),
     ("every project directory is gitignored", check_gitignore_covers_projects, "local"),
     ("every README this project owns is under 40 lines", check_readme_length, "local"),
     ("every path recomposes to its repository name", check_path_recomposes, "local"),
     ("no document uses a word RFD 0111 retired", check_retired_words, "local"),
     ("no document names a repository that moved", check_names_resolve, "network"),
-    ("every repository we own carries a usable licence", check_licences, "network"),
+    ("every repository we own carries a usable licence", check_licences, "local"),
     ("a project that serves Pages keeps the name its URL contains", check_pages_names, "network"),
     ("a day never books more seconds than a day holds", check_a_day_holds_a_day, "local"),
     ("no README lists the filesystem", check_no_readme_lists_the_filesystem, "local"),
@@ -857,6 +1009,12 @@ BREAKAGE = {
     # The checkout directory is `path`, so the edit that breaks this check moves the clone
     # out of an ignored directory. Editing the name instead leaves `path` ignored and the
     # check passes, which makes the control certify nothing.
+    # Moving a project to an organisation on neither list is the drift this catches. The
+    # org comes from the remote, so renaming the project changes nothing -- the first
+    # attempt did that and the self-test called it decoration, correctly.
+    "every project is writable by us or listed read-only": (
+        "m", '<project name="transport-asset" path="1-transport/asset" remote="v-sekai-multiplayer-fabric"',
+             '<project name="transport-asset" path="1-transport/asset" remote="meshula"'),
     # Asking GitHub cannot be perturbed by editing a file here, so the control replaces the
     # answer: a repository that is a fork and is not on the list must be reported.
     "the mirror list matches what GitHub calls a fork": (
@@ -904,8 +1062,15 @@ def main():
     self_test = "--self-test" in sys.argv
     failed = 0
 
-    only_local = "--local-only" in sys.argv
-    selected = [c for c in CHECKS if not (only_local and c[2] == "network")]
+    # --fast is the checkout, --slow is the network. Everything a `repo sync` already put on
+    # disk is answered from disk, so fast is the larger half and the one that runs on every
+    # commit; slow asks GitHub only about repository settings a clone cannot carry -- the
+    # default branch, the Pages URL and the fork flag.
+    only_local = "--local-only" in sys.argv or "--fast" in sys.argv
+    only_network = "--slow" in sys.argv
+    selected = [c for c in CHECKS
+                if not (only_local and c[2] == "network")
+                and not (only_network and c[2] == "local")]
     deferred = [c[0] for c in CHECKS if only_local and c[2] == "network"]
 
     for label, fn, _kind in selected:
