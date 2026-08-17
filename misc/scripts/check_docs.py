@@ -473,24 +473,25 @@ PAGES_OVERRIDE = None
 LEDGER_OVERRIDE = None
 SEPARATION_OVERRIDE = None
 
-# One 2-4 commit session is te 1.16 h in the table CLAUDE.md derives from git, and it is
-# the smallest unit of real work this organisation does. A month booking less than that to
-# the deliverable did not work on it; 0.06 h -- the reading when this check was written --
-# is a rename sweep brushing a file, not a session.
-MIN_DELIVERY_H = 1.16
+# One 2-4 commit session is te 4176 seconds in the table CLAUDE.md derives from git, and it
+# is the smallest unit of real work this organisation does. A month booking less than that
+# to the deliverable did not work on it; a few hundred seconds is a rename sweep brushing a
+# file, not a session. The unit is the SI second, so nothing here is a conversion somebody
+# has to trust: a git timestamp is in seconds and so is every amount below it.
+MIN_DELIVERY_S = 4176
 DELIVERY_WINDOW_DAYS = 30
 
 
 def check_plan_and_spend_are_separate(_mtext, _rtext):
-    """A planned hour and a spent hour MUST never share an account or a unit.
+    """Planned time and spent time MUST never share an account or a unit.
 
     The plan estimates work nobody has done, so it books liabilities: an obligation
     outstanding. The ledger books expenses: hours that went somewhere. Put an estimate in
     an expense account and the plan reports itself as progress, which is the failure this
     whole ledger exists to stop, arriving from the inside.
 
-    The unit does most of this work without help: planned hours are PLANNED-HOURS and spent
-    hours are HOURS, and beancount will not balance across commodities, so netting one
+    The unit does most of this work without help: planned time is PLANNED-SECONDS and spent
+    time is SECONDS, and beancount will not balance across commodities, so netting one
     against the other fails at parse time with exit 1. This check is the belt to that
     braces -- it reads both files, intersects their account names and their commodities, and
     fails on any overlap, because the day somebody unifies the units to tidy them up is the
@@ -499,7 +500,7 @@ def check_plan_and_spend_are_separate(_mtext, _rtext):
     if SEPARATION_OVERRIDE is not None:
         # The check reads two files this repository generates, so no manifest edit can
         # perturb it. The control supplies the overlap instead.
-        return [f"{a} carries both planned and spent hours; an estimate reads as progress"
+        return [f"{a} carries both planned and spent time; an estimate reads as progress"
                 for a in sorted(SEPARATION_OVERRIDE)]
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
     import ledger
@@ -518,7 +519,7 @@ def check_plan_and_spend_are_separate(_mtext, _rtext):
             return [f"{f.name} is missing"]
     shared = accounts(ledger.SPENT) & accounts(ledger.PLANNED)
     if shared:
-        return [f"{a} carries both planned and spent hours; an estimate reads as progress"
+        return [f"{a} carries both planned and spent time; an estimate reads as progress"
                 for a in sorted(shared)]
     return []
 
@@ -528,7 +529,7 @@ def check_deliverable_moved(_mtext, _rtext):
 
     Every other check here asks whether a document is true. This one asks whether anything
     was delivered, because those are not the same and the difference is what went wrong:
-    over ninety days 21.2% of measured hours went to documents about the mesh and 7.4% to
+    over ninety days 21.2% of measured seconds went to documents about the mesh and 7.4% to
     the mesh, while every gate stayed green throughout. A green gate closes a check, not a
     deliverable.
 
@@ -542,7 +543,7 @@ def check_deliverable_moved(_mtext, _rtext):
     import ledger
 
     if LEDGER_OVERRIDE is not None:
-        hours, window = LEDGER_OVERRIDE
+        secs, window = LEDGER_OVERRIDE
     else:
         if not ledger.SPENT.exists():
             return [f"{ledger.SPENT.name} is missing; nothing counts what was delivered"]
@@ -550,10 +551,10 @@ def check_deliverable_moved(_mtext, _rtext):
         if r.returncode != 0:
             first = ((r.stderr or r.stdout).strip().splitlines() or ["?"])[0]
             return [f"bean-check rejects the ledger: {first[:120]}"]
-        hours, window = ledger.delivery_hours(DELIVERY_WINDOW_DAYS), DELIVERY_WINDOW_DAYS
-    if hours < MIN_DELIVERY_H:
-        return [f"{hours:.2f} h booked to the deliverable in {window} days, under "
-                f"{MIN_DELIVERY_H} h. Whatever else merged, the thing being built did not move."]
+        secs, window = ledger.delivery_seconds(DELIVERY_WINDOW_DAYS), DELIVERY_WINDOW_DAYS
+    if secs < MIN_DELIVERY_S:
+        return [f"{secs:.0f} s booked to the deliverable in {window} days, under "
+                f"{MIN_DELIVERY_S}. Whatever else merged, the thing being built did not move."]
     return []
 
 
@@ -634,7 +635,7 @@ CHECKS = [
     ("every repository we own carries a usable licence", check_licences, "network"),
     ("a project that serves Pages keeps the name its URL contains", check_pages_names, "network"),
     ("the deliverable moved this month", check_deliverable_moved, "local"),
-    ("planned and spent hours never share an account", check_plan_and_spend_are_separate, "local"),
+    ("planned and spent time never share an account", check_plan_and_spend_are_separate, "local"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -677,10 +678,10 @@ BREAKAGE = {
     # The ledger is generated from git, so no edit here can move an hour into or out of a
     # window. The control replaces the reading instead, with the exact one that was true
     # when this check was written: 0.06 h in thirty days.
-    "the deliverable moved this month": ("g", (0.06, 30)),
+    "the deliverable moved this month": ("g", (216, 30)),
     # Booking a planned hour to the account the ledger spends from is the exact confusion
     # this check exists to stop, so the control makes that edit.
-    "planned and spent hours never share an account": ("s", {"Expenses:Delivery:Mesh"}),
+    "planned and spent time never share an account": ("s", {"Expenses:Delivery:Mesh"}),
 }
 
 
