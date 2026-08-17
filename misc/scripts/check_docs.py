@@ -472,6 +472,7 @@ def _licence_of(org, name):
 PAGES_OVERRIDE = None
 LEDGER_OVERRIDE = None
 SEPARATION_OVERRIDE = None
+DAY_OVERRIDE = None
 
 # One 2-4 commit session is te 4176 seconds in the table CLAUDE.md derives from git, and it
 # is the smallest unit of real work this organisation does. A month booking less than that
@@ -522,6 +523,36 @@ def check_plan_and_spend_are_separate(_mtext, _rtext):
         return [f"{a} carries both planned and spent time; an estimate reads as progress"
                 for a in sorted(shared)]
     return []
+
+
+def check_a_day_holds_a_day(_mtext, _rtext):
+    """A day's books MUST NOT sum past the seconds a day contains.
+
+    The ledger allocates one pool -- every interval between consecutive commits anywhere in
+    the workspace -- and charges each interval to the repository whose commit closed it.
+    That makes a day's books a partition of that day's wall clock, so 86400 is not a budget
+    somebody chose, it is arithmetic. A day over it means the allocation stopped being a
+    partition and started double-counting, whatever the totals look like.
+
+    This is not hypothetical. The first version summed each repository's own sessions
+    instead of allocating, and charged 2026-08-16 with 144,144 s -- 1.67 days -- and nothing
+    objected, because nothing was checking. It was found by reading, which is the way to
+    find things that a check should be finding.
+
+    The margin is thin enough to matter: the busiest day books 77,475 s, 89.7% of one. A
+    regression here would look plausible rather than absurd, which is exactly when a gate
+    earns its keep.
+    """
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import ledger
+
+    if DAY_OVERRIDE is not None:
+        over = DAY_OVERRIDE
+    else:
+        over = ledger.overbooked_days()
+    return [f"{day} books {s:.0f} s, and a day holds {ledger.SECONDS_IN_A_DAY}; "
+            "the allocation is double-counting rather than partitioning"
+            for day, s in over]
 
 
 def check_deliverable_moved(_mtext, _rtext):
@@ -634,6 +665,7 @@ CHECKS = [
     ("no document names a repository that moved", check_names_resolve, "network"),
     ("every repository we own carries a usable licence", check_licences, "network"),
     ("a project that serves Pages keeps the name its URL contains", check_pages_names, "network"),
+    ("a day never books more seconds than a day holds", check_a_day_holds_a_day, "local"),
     ("the deliverable moved this month", check_deliverable_moved, "local"),
     ("planned and spent time never share an account", check_plan_and_spend_are_separate, "local"),
 ]
@@ -678,6 +710,9 @@ BREAKAGE = {
     # The ledger is generated from git, so no edit here can move an hour into or out of a
     # window. The control replaces the reading instead, with the exact one that was true
     # when this check was written: 0.06 h in thirty days.
+    # Generated from git, so no edit here can overbook a day. The control supplies the
+    # reading instead, with the figure the un-allocated version actually produced.
+    "a day never books more seconds than a day holds": ("d2", [("2026-08-16", 144144.0)]),
     "the deliverable moved this month": ("g", (216, 30)),
     # Booking a planned hour to the account the ledger spends from is the exact confusion
     # this check exists to stop, so the control makes that edit.
@@ -703,13 +738,15 @@ def main():
 
     if self_test:
         print("\nnegative controls (each check must fail on broken input):")
-        global DOC_OVERRIDE, PAGES_OVERRIDE, LEDGER_OVERRIDE, SEPARATION_OVERRIDE
+        global DOC_OVERRIDE, PAGES_OVERRIDE, LEDGER_OVERRIDE, SEPARATION_OVERRIDE, DAY_OVERRIDE
         for label, fn, _kind in selected:
             spec = BREAKAGE[label]
             m2, r2 = mtext, rtext
             DOC_OVERRIDE = PAGES_OVERRIDE = LEDGER_OVERRIDE = None
-            SEPARATION_OVERRIDE = None
-            if spec[0] == "s":
+            SEPARATION_OVERRIDE = DAY_OVERRIDE = None
+            if spec[0] == "d2":
+                DAY_OVERRIDE = spec[1]
+            elif spec[0] == "s":
                 SEPARATION_OVERRIDE = spec[1]
             elif spec[0] == "g":
                 LEDGER_OVERRIDE = spec[1]
@@ -740,6 +777,7 @@ def main():
                 PAGES_OVERRIDE = None
                 LEDGER_OVERRIDE = None
                 SEPARATION_OVERRIDE = None
+                DAY_OVERRIDE = None
             if broke:
                 print(f"ok    {label} fails on broken input")
             else:

@@ -66,6 +66,27 @@ def _planned_text():
 # definition the PERT table in CLAUDE.md is derived from, so the two agree by construction.
 SESSION_GAP_H = 4
 
+# A day holds 86400 seconds and the allocation is a partition of wall clock, so a day's
+# books must sum to no more than that. It is not a style rule: the first version of this
+# ledger summed each repository's own sessions and charged 2026-08-16 with 144,144 s, which
+# is 1.67 days, and nothing objected because nothing was checking. The busiest day now
+# books 77,475 s, 89.7% of one, so the margin is thin enough that a regression would look
+# plausible rather than absurd.
+SECONDS_IN_A_DAY = 86400
+
+
+def day_totals():
+    """Seconds booked per calendar day, across every project's book."""
+    d = collections.Counter()
+    for day, _acct, secs in _postings():
+        d[day] += secs
+    return d
+
+
+def overbooked_days():
+    """Days that book more seconds than a day contains. Must always be empty."""
+    return sorted((day, s) for day, s in day_totals().items() if s > SECONDS_IN_A_DAY)
+
 # The deliverable. One at a time, and it changes only when the previous one is finished.
 DELIVERABLE = ("A player draws a closed curve in VR, gets a mesh back, "
                "and the mesh is correct by a check that can fail")
@@ -427,6 +448,11 @@ def verify():
             bad += 1
         else:
             print(f"  bean-check ok  {f.name}")
+    over = overbooked_days()
+    for day, s in over[:5]:
+        print(f"  {day} books {s:.0f} s, and a day holds {SECONDS_IN_A_DAY}")
+    bad += len(over)
+
     before = {f.name: f.read_text(encoding="utf-8") for f in sorted(SPENT_DIR.glob("*.beancount"))}
     before[SPENT.name] = SPENT.read_text(encoding="utf-8")
     build()
