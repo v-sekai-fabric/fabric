@@ -33,3 +33,10 @@
   steps: "Add the MIT licence this repository was always published under | Cut the README to forty lines, and convert to the RFD 0111 words (#2) | Name the repositories these documents actually point at (#3)"
   Expenses:Other:Gateway                      10 SECONDS
   Income:Sessions
+
+2026-08-17 * "1-transport/gateway" "Drop the directory listing without replacing it (#5)"
+  spent: TRUE
+  commits: 2
+  steps: "Say what the dependencies are, not what the directories are (#4) | Drop the directory listing without replacing it (#5)"
+  Expenses:Other:Gateway                    1425 SECONDS
+  Income:Sessions

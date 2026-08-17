@@ -139,9 +139,16 @@
   Expenses:Other:Assembly                   2172 SECONDS
   Income:Sessions
 
-2026-08-13 * "4-entities/assembly" "Merge pull request #50 from v-sekai-multiplayer-fabric/fire-patch-1"
+2026-08-13 * "4-entities/assembly" "Drop feat/engine-fabric-core from the assembly"
+  spent: TRUE
+  commits: 3
+  steps: "Update gitassembly | Merge pull request #50 from v-sekai-multiplayer-fabric/fire-patch-1 | Drop feat/engine-fabric-core from the assembly"
+  Expenses:Other:Assembly                   5387 SECONDS
+  Income:Sessions
+
+2026-08-17 * "4-entities/assembly" "Merge pull request #51 from v-sekai-multiplayer-fabric/drop-engine-fabric-core-from-the-"
   spent: TRUE
   commits: 2
-  steps: "Update gitassembly | Merge pull request #50 from v-sekai-multiplayer-fabric/fire-patch-1"
-  Expenses:Other:Assembly                   5181 SECONDS
+  steps: "Format the markdown, and give this repository a check to pass | Merge pull request #51 from v-sekai-multiplayer-fabric/drop-engine-fabri"
+  Expenses:Other:Assembly                   1391 SECONDS
   Income:Sessions

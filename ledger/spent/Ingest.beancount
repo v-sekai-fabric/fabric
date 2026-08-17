@@ -26,3 +26,10 @@
   steps: "Add the MIT licence this repository was always published under | Cut the README to a screen, and use the words RFD 0111 decided (#1)"
   Expenses:Other:Ingest                       73 SECONDS
   Income:Sessions
+
+2026-08-17 * "1-transport/ingest" "Drop the directory listing without replacing it (#3)"
+  spent: TRUE
+  commits: 2
+  steps: "Say what the dependencies are, not what the directories are (#2) | Drop the directory listing without replacing it (#3)"
+  Expenses:Other:Ingest                       33 SECONDS
+  Income:Sessions
