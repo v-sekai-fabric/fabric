@@ -116,7 +116,7 @@
   <project name="datasource-queen" path="6-datasource/queen" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="datasource-flow" path="6-datasource/flow" remote="v-sekai-multiplayer-fabric" revision="main-fabric" />
   <project name="datasource-flow-project" path="6-datasource/flow-project" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="datasource-foundationdb" path="6-datasource/foundationdb" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="datasource-foundationdb" path="6-datasource/foundationdb" remote="v-sekai-multiplayer-fabric" revision="portability-consensus" />
   <project name="datasource-duckdb" path="6-datasource/duckdb" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="datasource-flowref" path="6-datasource/flowref" remote="fire" revision="main" />
   <project name="datasource-flowref-decompiler" path="6-datasource/flowref-decompiler" remote="fire" revision="main" />

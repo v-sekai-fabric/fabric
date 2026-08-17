@@ -28,6 +28,22 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+
+def _workspace_root():
+    """Where the checkouts sit, which is not where this repository sits.
+
+    `repo init` clones this repository into `.repo/manifests` and puts the projects two
+    levels above it. Assuming they were beside it was true only while a `path="."` entry
+    checked this repository out at the workspace root, and that entry was removed because
+    it gave repo two working copies. Afterwards `_checkouts()` found exactly one checkout
+    -- itself -- and a rebuild quietly cut the ledger from 326 sessions to 3.
+
+    Same helper `check_docs.py` already carries, for the same reason.
+    """
+    if ROOT.name == "manifests" and ROOT.parent.name == ".repo":
+        return ROOT.parent.parent
+    return ROOT
 SPENT = ROOT / "ledger" / "spent.beancount"
 PLANNED = ROOT / "ledger" / "planned.beancount"
 
@@ -47,20 +63,21 @@ LANES = {
     "3-interactor/cassie": "Expenses:Delivery:Mesh",
     "3-interactor/sketch": "Expenses:Delivery:Mesh",
     "2-contract/manuals": "Expenses:Docs",
+    ".repo/manifests": "Expenses:Fabric",
     ".": "Expenses:Fabric",
 }
 DEFAULT_LANE = "Expenses:Other"
 ACCOUNTS = ["Income:Sessions", "Expenses:Delivery:Mesh", "Expenses:Docs",
             "Expenses:Fabric", "Expenses:Other"]
 
-# Repositories another organisation authors. Their commits are not this project's hours,
-# and booking them would drown the lanes that are. Kept in step with check_docs.py's
-# FIXED_NAMES and MIRRORS by naming the checkout rather than the repository.
-NOT_OURS = {
-    "6-datasource/foundationdb", "4-entities/godot", "4-entities/LabRCSF",
-    "6-datasource/cassie-data", "6-datasource/idtx-flow", "4-entities/model-explorer",
-    "1-transport/xr-grid", ".repo/repo", ".repo/manifests",
-}
+# Whose commits are this project's hours. Keyed on the author, not on the repository.
+#
+# It was a list of checkouts to skip, which is a proxy for "code we did not write" and a
+# proxy a fork breaks: 6-datasource/foundationdb was on the list to keep upstream's 2366
+# commits out, and it kept our sixteen on portability-consensus out with them, so a day of
+# CI work on that repository booked 0.00 h. The author is the thing actually being asked
+# about, and it needs no list to stay current.
+OURS = {"ernest.lee@chibifire.com", "fire@users.noreply.github.com"}
 
 
 def _checkouts():
@@ -70,15 +87,14 @@ def _checkouts():
     directory down; a one-level glob finds the few at the root and reports the rest as
     absent, which is the answer this exists to prevent.
     """
-    ws = ROOT
+    ws = _workspace_root()
     seen = []
     for pat in ("*/.git", "*/*/.git"):
         for g in ws.glob(pat):
-            rel = str(g.parent.relative_to(ws))
-            if rel not in NOT_OURS:
-                seen.append((rel, g.parent))
-    if (ws / ".git").exists():
-        seen.append((".", ws))
+            seen.append((str(g.parent.relative_to(ws)), g.parent))
+    # This repository is one of the checkouts, wherever repo put it.
+    if (ROOT / ".git").exists():
+        seen.append((str(ROOT.relative_to(ws)) if ROOT != ws else ".", ROOT))
     return sorted(set(seen))
 
 
@@ -107,10 +123,13 @@ def _allocate():
     """
     events = []
     for rel, path in _checkouts():
-        out = subprocess.run(["git", "-C", str(path), "log", "--pretty=%ct\t%s"],
+        out = subprocess.run(["git", "-C", str(path), "log", "--pretty=%ct\t%ae\t%s"],
                              capture_output=True, text=True).stdout.splitlines()
         for line in out:
-            ct, _, subj = line.partition("\t")
+            ct, _, rest = line.partition("\t")
+            email, _, subj = rest.partition("\t")
+            if email not in OURS:
+                continue
             try:
                 events.append((int(ct), rel, subj))
             except ValueError:
