@@ -8,16 +8,10 @@ repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric && repo sync -
 
 ## The layout
 
-`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered directories are its sides; that file's opening comment names all six. This repository is not among them — `repo init` clones it to `.repo/manifests` and reads the manifest from there, so edit it in that checkout. Every project states its own `remote` and `revision`, so one that omits either fails at `repo init` rather than inheriting a default. Most projects track `main`. The seven that do not:
+`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered directories are its sides; that file's opening comment names all six. This repository is not among them — `repo init` clones it to `.repo/manifests` and reads the manifest from there, so edit it in that checkout. Every project states its own `remote` and `revision`, so one that omits either fails at `repo init` rather than inheriting a default. Every project tracks its repository's default branch. The one that does not:
 
 | project | revision |
 |---|---|
-| `entities-godot` | `gyre` |
-| `interactor-triangulation` | `legacy` |
-| `datasource-flow` | `main-fabric` |
-| `contract-http3-queue` | `master` |
-| `cassie-data` | `master` |
-| `LabRCSF` | `dev` |
 | `datasource-foundationdb` | `portability-consensus` |
 
 ## The ledger
