@@ -35,9 +35,9 @@
   Expenses:Fabric:Fabric                   20771 SECONDS
   Income:Sessions
 
-2026-08-17 * ".repo/manifests" "One book per project, in SI seconds, carrying each project's citation (#39)"
+2026-08-17 * ".repo/manifests" "Split the plan per project, and pin each copied citation to its commit (#40)"
   spent: TRUE
-  commits: 2
-  steps: "Book hours by author, and let the ledger see the workspace again (#38) | One book per project, in SI seconds, carrying each project's citation (#"
-  Expenses:Fabric:Fabric                    9245 SECONDS
+  commits: 3
+  steps: "Book hours by author, and let the ledger see the workspace again (#38) | One book per project, in SI seconds, carrying each project's citation (# | Split the plan per project, and pin each copied citation to its commit ("
+  Expenses:Fabric:Fabric                   10770 SECONDS
   Income:Sessions
