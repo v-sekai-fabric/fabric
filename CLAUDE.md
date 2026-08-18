@@ -200,7 +200,7 @@ time it is wrong, because each error is converted into a check before the fix sh
 
 - **One source of truth per fact, and it is not the prose.** `default.xml` says what the fleet
   is; the README describes it. Where the two disagree the manifest wins and the prose is the
-  bug. `misc/scripts/check_docs.py` derives every documented count, name, and branch from the manifest.
+  bug. The `misc/checks` mix application derives every documented count, name, and branch from the manifest.
 - **Every claim is executable or it is decoration.** Counts, tables, branch names, and sizes
   are checked by a command that exits non-zero. A claim no command can falsify does not belong
   in the document. This is the `Checks` rule above, applied to sentences.
@@ -208,7 +208,7 @@ time it is wrong, because each error is converted into a check before the fix sh
   other half is the assertion that would have caught it, in the same change. That is the whole
   mechanism -- stress adds checks, so the harness is strongest exactly where documentation has
   failed before.
-- **The doc gate ships with a negative control.** `check_docs.py --self-test` breaks each claim
+- **The doc gate ships with a negative control.** `mix check --self-test` breaks each claim
   on purpose and requires the matching check to fail. A gate never seen failing is a gate
   nobody has evidence works, and that applies to a README gate as much as to a build gate.
 - **Never hedge to survive.** "Roughly", "should be", and "approximately" on a knowable number
@@ -228,7 +228,7 @@ by a control that reported its own pattern had gone dead. Only the third one fou
 ### A README is under forty lines
 
 - Every `README.md` in a repository this project is the **primary source** for MUST be
-  under 40 lines. `misc/scripts/check_docs.py` gates it, offline, at commit stage.
+  under 40 lines. `mix check --fast` gates it, offline, at commit stage.
 - A **mirror** is exempt. Its README belongs to its upstream, and editing it forks a
   document this project does not own. `MIRRORS` in that script names each one and the
   evidence: `entities-godot` opens "# Godot Engine", `datasource-foundationdb` and `idtx-flow`
@@ -269,7 +269,7 @@ repository. That is the loop this section exists to end.
   one place. Nine gates in nine repositories is nine things to keep in step.
 - A check that reads a child's files cannot be broken by editing this repository, so its
   negative control MUST inject a defective document instead. `DOC_OVERRIDE` in
-  `check_docs.py` is that seam, and without it those controls would pass while proving
+  The context each check is handed is that seam, and without it those controls would pass while proving
   nothing.
 - A check that finds nothing because it looked at nothing MUST say so. The document checks
   print how many children they scanned, because zero reads exactly like clean.

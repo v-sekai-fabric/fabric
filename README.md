@@ -21,9 +21,14 @@ python3 misc/scripts/ledger.py path                # HYPOTHETICAL, the critical 
 
 ## Checks
 
+`misc/checks` is a mix application, one module per concern, each runnable on its own.
+
 ```sh
-python3 misc/scripts/check_docs.py --fast  # the checkout answers these, 0.7s
-python3 misc/scripts/check_docs.py --self-test # each must fail on broken input
+mix check --fast       # the checkout answers these
+mix check --slow       # what only a remote can answer
+mix check --self-test  # each must fail on broken input
+mix check authority    # one concern, and only it
+mix dialyzer           # the gate's own types
 ```
 
 Every claim above is derived from `default.xml` or the ledger and gated. `CLAUDE.md` says why.

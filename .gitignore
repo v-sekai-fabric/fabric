@@ -38,3 +38,9 @@ node_modules/
 # Built from memory/*.usda by misc/scripts/memory.py; the relations are the source.
 /memory/fabric.sqlite3
 /.DS_Store
+
+# The doc gate is a mix application. Its build output, its fetched dependency and its
+# dialyzer PLTs are all derived from mix.exs and mix.lock, so none of them is tracked.
+misc/checks/_build/
+misc/checks/deps/
+misc/checks/priv/plts/
