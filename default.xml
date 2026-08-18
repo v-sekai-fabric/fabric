@@ -142,6 +142,12 @@
   <project name="contract-protocol" path="2-contract/protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-interest-mgmt" path="2-contract/interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-patch-verify" path="2-contract/patch-verify" remote="fire" revision="main" />
+  <!-- The obstruction behind interactor-triangulation's two mesh properties, proved rather
+       than measured. A triangle's aspect ratio is at least its longest edge over its shortest,
+       so a bound on the ratio is a lower bound on edge length, and a boundary that comes
+       closer to itself than that admits no triangulation meeting the bound. The C++ library
+       validates its input against the number this repository derives. -->
+  <project name="contract-triangulation" path="2-contract/triangulation" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- The manuals publish GitHub Pages, and a Pages URL does not redirect on rename,
        so this name is a published address rather than only a repository name. -->
   <project name="multiplayer-fabric-manuals" path="2-contract/manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
