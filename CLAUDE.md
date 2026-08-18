@@ -27,6 +27,11 @@ lines rather than discoveries, and makes the next one visible in a diff.
 - Commit style: sentence case. Do not use a `type(scope):` prefix.
 - Split a branch by concern, not by the order the work happened in. A commit is one idea and
   the whole of it: if a later commit fixes what an earlier one broke, they were one commit.
+- A split is not free, and the cost is CI. Every commit must pass on its own, so a branch of
+  `n` commits is `n` verifications rather than one, paid again on every push while it lives.
+  Most branches are one idea: squash them locally with `git rebase -i` before marking the
+  pull request ready, and keep a split only where the concerns are independent enough that
+  reading them one at a time is worth what it costs to verify them one at a time.
 - Every commit MUST pass CI on its own, not only the last one. This decides some splits for
   you rather than leaving them to taste — a constant and the CI numbers derived from it cannot
   be separated, because neither half passes alone.
@@ -57,11 +62,16 @@ After a merge, check that the work reached the target branch rather than that it
 arrive, and comparing trees answers that whatever the merge did to the commits.
 
 Do not use `git log origin/main..<branch>` for this. It asks whether the commit is an
-ancestor, which a squash merge always makes false -- GitHub writes a new commit, so the
-branch tip is unreachable from main even when every byte landed. It cried wolf on #50, #52
-and #53 in one day, each time on a merge that was complete. A check that is red on every
-correct merge is one nobody reads by the fourth time, which is the failure it was written
-to prevent.
+ancestor, which a rewritten tip always makes false -- a squash or a rebase merge gives the
+merge a new SHA, so the branch tip is unreachable from main even when every byte landed. It
+cried wolf on #50, #52 and #53 in one day, each time on a merge that was complete. A check
+that is red on every correct merge is one nobody reads by the fourth time, which is the
+failure it was written to prevent.
+
+RFD 0021 now disables squash and rebase merging here, so a tip stops being rewritten and
+reachability starts holding again. The tree comparison stays the check anyway: history
+already holds the squashed merges above, and a check indifferent to how a merge was made
+keeps working if somebody turns a setting back on.
 
 `gh pr view --json commits` still says what the merge took, and it is the number to trust
 for which commits were included.
