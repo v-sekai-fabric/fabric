@@ -158,10 +158,13 @@
 
   <!-- 7: the services. Each packs sides into one deployable thing and holds no code of its
        own: the composition, the endpoint it runs on, why the membership is what it is, and
-       the release ladder. `service-zone` and `service-behaviour` belong here too and are not
-       listed yet, because both READMEs still say "edge plane", a compound RFD 0111 retired;
-       adding them turns `mix check words` red until they are rewritten. -->
+       the release ladder. `service-zone` and `service-behaviour` were held out of this list
+       while their READMEs still said "edge plane", a compound RFD 0111 retired, because
+       listing them turned `mix check words` red. Both now say "transport layer", which is the
+       substitution the gate itself prescribes, so both take their entry here. -->
+  <project name="service-behaviour" path="7-service/behaviour" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="service-see-through" path="7-service/see-through" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="service-zone" path="7-service/zone" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 0: the fabric's record of itself. Not a side, and not a packing of sides: every other
        project here is a subject of this one, which is why it sorts before all of them. It
