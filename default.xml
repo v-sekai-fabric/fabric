@@ -167,15 +167,7 @@
        project here is a subject of this one, which is why it sorts before all of them. It
        holds the conventions in CLAUDE.md, the ledger that books the hours, the gates that
        decide whether the documents are true, and the logbook. -->
-  <!-- linkfile, so the conventions load rather than needing to be named. A CLAUDE.md loads for
-       the directories under it, and this project is a sibling of every other one, so nothing in
-       1-transport or 3-interactor picked it up by proximity. The symlink puts it at the
-       workspace root, above every checkout, and points back into the project, so there is one
-       copy and edits land where the file lives. A copyfile would be a second thing to keep in
-       step, which is the arrangement this project exists to end. -->
-  <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main">
-    <linkfile src="CLAUDE.md" dest="CLAUDE.md" />
-  </project>
+  <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 6: the data sources. Each implements a repository: durable state, a file format,
        or a reader that gets facts out of something that was not built to be queried. -->
