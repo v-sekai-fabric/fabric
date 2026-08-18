@@ -167,6 +167,19 @@
        project here is a subject of this one, which is why it sorts before all of them. It
        holds the conventions in CLAUDE.md, the ledger that books the hours, the gates that
        decide whether the documents are true, and the logbook. -->
+  <!-- The agent configuration, checked out where Claude Code looks for it. `path=".claude"`
+       is legal: repo's `_CheckLocalPath` bans only `.`, `..`, `.git` and `.repo*` as path
+       components, so this gets an ordinary managed checkout with its gitdir under
+       `.repo/projects/`. A single-segment path recomposes to itself, which is why the
+       repository is named `.claude` and not `claude-config`.
+
+       A repository rather than a `linkfile` into the logbook, which is what this nearly was.
+       A symlink is invisible to every check here. `repo status` cannot see drift in it and
+       nothing gates it, so one project's permission settings would have become every
+       project's with no diff and no history behind the change. As a project it is ordinary:
+       reviewable, gated, and reported like anything else. -->
+  <project name=".claude" path=".claude" remote="v-sekai-multiplayer-fabric" revision="main" />
+
   <!-- linkfile, so the conventions load rather than needing to be named. A CLAUDE.md loads for
        the directories under it, and this project is a sibling of every other one, so nothing in
        1-transport or 3-interactor picked it up by proximity. The symlink puts it at the
