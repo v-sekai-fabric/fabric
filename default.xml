@@ -192,7 +192,7 @@
        by a gate. Its own README says "Not built": it states a packing whose quadlet units
        and Fly machine definition do not exist yet, so there is nothing behind it to sync. The
        work is on `service-see-through` and `service-behaviour`, and a listed project is one
-       every sync clones, every `repo status` walks and every gate run reads — a per-sync cost
+       every sync clones, every `repo status` walks and every gate run reads: a per-sync cost
        paid across every desk for a repository nobody is editing. The remote keeps it and
        nothing is lost; it takes its entry back when the work reaches it. -->
   <project name="service-behaviour" path="7-service/behaviour" remote="v-sekai-multiplayer-fabric" revision="main" />
