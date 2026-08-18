@@ -31,6 +31,13 @@
 /7-service/
 /0-infrastructure/
 
+# The agent configuration, a project like any other, but at a path that starts with a dot
+# rather than with its side's number. It is not on a side: Claude Code decides where it goes,
+# and `.claude/` at the workspace root is where it looks. Ignored here for the same reason
+# every other project path is -- a clone showing up as untracked invites somebody to commit
+# one repository into another.
+/.claude/
+
 # Build and run output from work done at the workspace root rather than inside a child. Logs
 # from a long engine build or a test server land here and are worth keeping on disk while a
 # session runs, and worth keeping out of a manifest repository afterwards.
