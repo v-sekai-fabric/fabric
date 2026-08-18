@@ -145,7 +145,15 @@
        geogram carries submodules of its own, and vendoring one level does not reach them.
        The first attempt compiled until `geogram/third_party/OpenNL/nl.h` was not there.
        `sync-s` makes repo sync those as sub-projects, so the recursion belongs to repo. -->
-  <project name="geogram" path="3-interactor/triangulation/libs/geogram" remote="brunolevy" revision="c40b4653e34519fffaeb82ca640bdd9c9778e324" sync-s="true" />
+  <!-- v1.10.0. The pin was v1.9.9, and v1.9.9 does not build on a current MSVC:
+       third_party/PoissonRecon/Hash.h includes <hash_map>, which Microsoft has
+       removed. It compiled on the desk here only because that toolchain still
+       ships the header, and failed on GitHub's windows-latest, which does not --
+       a difference between two Windows machines rather than between platforms,
+       and the reason a gate belongs somewhere other than one desk. Upstream
+       removed the include in 3aa47aeb; v1.9.10 and v1.10.0 are the same commit
+       and both carry it. -->
+  <project name="geogram" path="3-interactor/triangulation/libs/geogram" remote="brunolevy" revision="c8529bb00838186938ab31d96008a59b6a892dee" sync-s="true" />
   <project name="pmp-library" path="3-interactor/triangulation/libs/pmp-library" remote="pmp-library" revision="f2fb04f4a4188a5c1ab137e83b96e62fa99c639f" sync-s="true" />
   <project name="interactor-sketch" path="3-interactor/sketch" remote="v-sekai" revision="main" />
   <!-- Two implementations of one interactor, and the language is what tells them apart, the
