@@ -40,6 +40,14 @@ defmodule Check.Authority do
         break: &Map.put(&1, :licences, %{"transport-fanout" => "AGPL-3.0"})
       },
       %{
+        label: "every repository we own carries a CITATION.cff",
+        kind: :local,
+        run: &citations/1,
+        # Reads the children's trees, which no edit here reaches, so the control supplies the
+        # reading rather than perturbing a file.
+        break: &Map.put(&1, :citations, [{"transport-fanout", :missing}])
+      },
+      %{
         label: "no repository we may write to carries a .DS_Store",
         kind: :local,
         run: &no_ds_store/1,
@@ -226,6 +234,97 @@ defmodule Check.Authority do
   end
 
   @doc """
+  Every repository this organisation owns MUST carry a `CITATION.cff` that says what it is
+  made of.
+
+  `CLAUDE.md` has required this since the `meta` conversion and nothing enforced it, which is
+  the shape of rule this repository already calls a suggestion: a claim no command can falsify
+  does not defend itself. Fourteen repositories carried one and the rest did not, which made
+  the file read as a habit of the Lean workspaces rather than as a rule.
+
+  Two things are asked, because presence alone is the weaker half. The file must parse far
+  enough to find a `title`, and it must carry a `references:` key -- provenance is the reason
+  the file exists, and a `CITATION.cff` with no references is the one that reads as current
+  while saying nothing. A repository genuinely built on nothing states `references: []` and
+  says so on purpose.
+
+  The boundary is authority, not authorship. A fork this organisation maintains is inside it:
+  its README belongs to its upstream and its `CITATION.cff` does not, because the file states
+  what *this* copy is made of and this copy is the one with a branch nobody upstream has. A
+  read-only entry, on another organisation's remote, is outside it. A child that is not cloned
+  is skipped rather than fetched.
+  """
+  def citations(ctx) do
+    case ctx[:citations] do
+      nil -> scan_citations(ctx)
+      injected -> for {name, why} <- injected, do: citation_message(name, why)
+    end
+  end
+
+  defp scan_citations(ctx) do
+    findings =
+      for {name, dir} <- ours(ctx), File.dir?(dir), why = citation_fault(dir), why != nil do
+        citation_message(name, why)
+      end
+
+    Enum.sort(findings)
+  end
+
+  defp citation_fault(dir) do
+    file = Path.join(dir, "CITATION.cff")
+
+    cond do
+      not File.exists?(file) -> :missing
+      true -> citation_content_fault(File.read!(file))
+    end
+  end
+
+  defp citation_content_fault(text) do
+    cond do
+      not Regex.match?(~r/^title:/m, text) -> :no_title
+      not Regex.match?(~r/^references:/m, text) -> :no_references
+      true -> nil
+    end
+  end
+
+  defp citation_message(name, :missing),
+    do: "#{name} carries no CITATION.cff, so what it is built on is stated nowhere checkable"
+
+  defp citation_message(name, :no_title),
+    do: "#{name}'s CITATION.cff has no title:, so it does not say what it is"
+
+  defp citation_message(name, :no_references),
+    do:
+      "#{name}'s CITATION.cff has no references:, which is the half that says what it is " <>
+        "made of; a repository built on nothing states references: [] and means it"
+
+  # The boundary the licence, citation and .DS_Store checks share: what this organisation may
+  # write to, less the read-only entries, and this repository itself.
+  #
+  # It does NOT subtract the mirrors, and that is the correction. Authority and authorship are
+  # two questions and this list had been answering both with one answer. A fork sitting in our
+  # own organisation is ours to write to -- we push builds to it -- while its README stays its
+  # upstream's. Excusing it from the licence and CITATION.cff gates as well confused "we did
+  # not write the prose" with "we may not add a file", and left the repositories whose
+  # provenance most needs stating as the only ones never asked for it.
+  #
+  # So there are three categories rather than two, and `Lib.mirrors/0` documents them:
+  # ours outright, a fork we maintain whose README is upstream's, and another organisation's.
+  # Only the third is out of reach here.
+  defp ours(ctx) do
+    allowed = Lib.allowed_orgs()
+    read_only = Lib.read_only()
+    ws = Lib.workspace_root()
+
+    [{"fabric", Lib.root()}] ++
+      for p <- Lib.projects(ctx.mtext),
+          p.org in allowed,
+          not Map.has_key?(read_only, p.name) do
+        {p.name, Path.join(ws, p.path)}
+      end
+  end
+
+  @doc """
   No .DS_Store in a repository this project may write to.
 
   Finder writes one into every directory it is asked to display, so the file arrives without
@@ -253,23 +352,9 @@ defmodule Check.Authority do
   end
 
   defp scan_ds_store(ctx) do
-    allowed = Lib.allowed_orgs()
-    mirrors = Lib.mirrors()
-    read_only = Lib.read_only()
-    ws = Lib.workspace_root()
-
-    # This repository is the one we have most authority over, so it is checked beside the
-    # projects rather than trusted.
-    ours =
-      [{"fabric", Lib.root()}] ++
-        for p <- Lib.projects(ctx.mtext),
-            p.org in allowed,
-            not Map.has_key?(mirrors, p.name),
-            not Map.has_key?(read_only, p.name) do
-          {p.name, Path.join(ws, p.path)}
-        end
-
-    for {name, dir} <- ours, File.dir?(dir), rel <- ds_stores(dir) do
+    # This repository is the one we have most authority over, so `ours/1` includes it and it
+    # is checked beside the projects rather than trusted.
+    for {name, dir} <- ours(ctx), File.dir?(dir), rel <- ds_stores(dir) do
       "#{name} carries #{rel}, which Finder wrote and nothing reads"
     end
     |> Enum.sort()

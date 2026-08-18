@@ -251,9 +251,26 @@ defmodule Check.Lib do
   def readme_max, do: 40
 
   @doc """
-  A mirror's README is upstream's. Editing it forks a document this project does not own,
-  so the limit does not reach one. Each entry states the evidence rather than an opinion:
-  two carry GitHub's fork flag, and the third carries upstream's own README.
+  A fork this organisation maintains: we may write to it, and its README is still upstream's.
+
+  This is the middle of three categories, and the middle one exists because authority and
+  authorship are different questions that one list used to answer together.
+
+    * **Ours outright.** Every gate applies.
+    * **A fork we maintain** -- here. It sits on our own remote, so it is ours to push to and
+      ours to add files to: the licence, `CITATION.cff` and `.DS_Store` gates all reach it. Its
+      README does not, because editing that forks a document upstream owns and this project
+      would then carry the diff forever.
+    * **Another organisation's**, in `read_only/0`. Membership is not authority, so nothing
+      here writes to one at all -- not a README, not a `CITATION.cff`.
+
+  Being in the middle rather than exempt is the point for `CITATION.cff` especially. A fork is
+  the repository whose provenance most needs stating -- it is upstream's code plus a branch
+  nobody upstream has -- and lumping it with the untouchables left exactly those repositories
+  never asked what they were made of.
+
+  Each entry states its evidence rather than an opinion: two carry GitHub's fork flag, and the
+  third carries upstream's own README.
   """
   def mirrors do
     %{

@@ -73,6 +73,9 @@
   <project name="transport-godot-mcp" path="1-transport/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-blender-mcp" path="1-transport/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-xr-grid" path="1-transport/xr-grid" remote="v-sekai" revision="main" />
+  <!-- The odd one: a RunPod Serverless worker is a client of its own endpoint, so this
+       terminates a queue rather than a socket. It carries no player traffic. -->
+  <project name="transport-runpod" path="1-transport/runpod" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 2: the contracts. Each is a model that both sides compose against, so the Lean
        workspaces that state a wire format, a lifecycle or a rule sit here rather than
@@ -95,6 +98,12 @@
   <project name="interactor-taskweft" path="3-interactor/taskweft" remote="taskweft" revision="main" />
   <project name="interactor-triangulation" path="3-interactor/triangulation" remote="fire" revision="legacy" />
   <project name="interactor-sketch" path="3-interactor/sketch" remote="v-sekai" revision="main" />
+  <!-- Two implementations of one interactor, and the language is what tells them apart, the
+       same way RFD 0123 splits the gateway pair. Neither takes the unqualified name: a name
+       that says which of two it is beats one that implies the other is a variant. They are
+       held to the same gate by a check in the Python half that reads the C++ half's header. -->
+  <project name="interactor-see-through-cpp" path="3-interactor/see-through-cpp" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="interactor-see-through-python" path="3-interactor/see-through-python" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- The academic CASSIE project's own Unity application. Its name is the paper's. -->
   <project name="cassie" path="3-interactor/cassie" remote="v-sekai" revision="main" />
 
