@@ -173,22 +173,19 @@
        `.repo/projects/`. A single-segment path recomposes to itself, which is why the
        repository is named `.claude` and not `claude-config`.
 
-       A repository rather than a `linkfile` into the logbook, which is what this nearly was.
-       A symlink is invisible to every check here. `repo status` cannot see drift in it and
-       nothing gates it, so one project's permission settings would have become every
-       project's with no diff and no history behind the change. As a project it is ordinary:
-       reviewable, gated, and reported like anything else. -->
+       A repository rather than a `linkfile` into the logbook, which is what this nearly was,
+       and the contrast is the reason the logbook below carries none. A symlink is invisible
+       to every check here. `repo status` cannot see drift in it and nothing gates it, so one
+       project's permission settings would have become every project's with no diff and no
+       history behind the change. A checkout has a history; a link does not.
+
+       Claude Code reads this path, which is what makes a project at the workspace root the
+       right answer here and the wrong one for a CLAUDE.md. The root belongs to repo and to
+       none of the fifty-four checkouts under it, so a document placed there is read by
+       everything above a checkout while being no project's to answer for. -->
   <project name=".claude" path=".claude" remote="v-sekai-multiplayer-fabric" revision="main" />
 
-  <!-- linkfile, so the conventions load rather than needing to be named. A CLAUDE.md loads for
-       the directories under it, and this project is a sibling of every other one, so nothing in
-       1-transport or 3-interactor picked it up by proximity. The symlink puts it at the
-       workspace root, above every checkout, and points back into the project, so there is one
-       copy and edits land where the file lives. A copyfile would be a second thing to keep in
-       step, which is the arrangement this project exists to end. -->
-  <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main">
-    <linkfile src="CLAUDE.md" dest="CLAUDE.md" />
-  </project>
+  <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 6: the data sources. Each implements a repository: durable state, a file format,
        or a reader that gets facts out of something that was not built to be queried. -->
