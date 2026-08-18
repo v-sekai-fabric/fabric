@@ -21,8 +21,7 @@
        The numbers carry the ring order, which the alphabet loses. A listing
        then prints the driving side first, the inside in the middle, and the
        driven side last, so the rule that all dependencies point inward reads
-       as "every side points at 3 and 4". Side 5 holds no git repository in
-       this dependency set yet.
+       as "every side points at 3 and 4".
 
        Every project sits on a side. There are no other directories: service/,
        lean/, engine/, authoring/, cassie/, vendor/ and doc/ all named how a
@@ -175,7 +174,12 @@
   <!-- Nick Porcino's reference skeleton. We have no admin on it, so we cannot rename it. -->
   <project name="LabRCSF" path="4-entities/LabRCSF" remote="meshula" revision="dev" />
 
-  <!-- 5: the repositories. This dependency set holds none yet. -->
+  <!-- 5: the repositories. Each is an interface that gets, creates and changes entities.
+       This side was empty until 2026-08-18, and it was not: `entity-store` had existed as an
+       untracked directory in the workspace for a day, with no git repository behind it and
+       nothing backing it up. An unlisted directory is the one state this manifest cannot see,
+       which is the argument for listing a skeleton rather than waiting for it to be finished. -->
+  <project name="repository-entity-store" path="5-repository/entity-store" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 7: the services. Each packs sides into one deployable thing and holds no code of its
        own: the composition, the endpoint it runs on, why the membership is what it is, and
