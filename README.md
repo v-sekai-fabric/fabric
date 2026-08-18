@@ -8,7 +8,12 @@ repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric && repo sync -
 
 ## The layout
 
-`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered directories are its sides; that file's opening comment names all six. This repository is not among them — `repo init` clones it to `.repo/manifests` and reads the manifest from there, so edit it in that checkout. Every project states its own `remote` and `revision`, so one that omits either fails at `repo init` rather than inheriting a default. Every project tracks its repository's default branch. The zero that do not would be listed here, and the check that keeps this sentence true asks GitHub rather than the manifest.
+`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered directories are its sides; that file's opening comment names all six. This repository is not among them — `repo init` clones it to `.repo/manifests` and reads the manifest from there, so edit it in that checkout. Every project states its own `remote` and `revision`, so one that omits either fails at `repo init` rather than inheriting a default. Every project tracks its repository's default branch, and the check that keeps this sentence true asks GitHub rather than the manifest. The two that do not are the libraries `interactor-triangulation` links, pinned to a commit rather than a branch because a library a build links is exactly the value a manifest exists to state:
+
+| project | revision |
+| --- | --- |
+| `geogram` | `c8529bb00838186938ab31d96008a59b6a892dee` |
+| `pmp-library` | `f2fb04f4a4188a5c1ab137e83b96e62fa99c639f` |
 
 ## What this repository is not
 
