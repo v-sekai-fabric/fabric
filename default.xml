@@ -205,10 +205,22 @@
   <!-- The agent configuration, checked out where Claude Code looks for it. `path=".claude"`
        is legal: repo's `_CheckLocalPath` bans only `.`, `..`, `.git` and `.repo*` as path
        components, so this gets an ordinary managed checkout with its gitdir under
-       `.repo/projects/`. A single-segment path recomposes to itself, which is why the
-       repository is named `.claude` and not `claude-config`.
+       `.repo/projects/`.
 
-       A repository rather than a `linkfile` into the logbook, which is what this nearly was,
+       `path` is not free here the way it is everywhere else: Claude Code reads `.claude` and
+       nothing else, so this one path is fixed by a tool outside this workspace. The name was
+       matched to it, because a single-segment path recomposes to itself, so naming it
+       `.claude` was what kept the recomposition rule true without an exception.
+
+       It is `dot-claude` now, and the rule takes an exception instead. A repository whose
+       name begins with a dot is hidden from an ordinary listing, sorts oddly, and reads as a
+       stray dotfile rather than as one of the fifty-odd projects here; `git clone` of it
+       lands in a directory most shells will not show you. The path cannot move to meet the
+       name, because the tool decides it, so `fixed_names` carries the pair. That list until
+       now held only names belonging to other organisations, which is a fact rather than a
+       choice, and this is the first entry that is ours. `Check.Manifest.path_recomposes/1`
+       says so in its own words. -->
+  <!-- A repository rather than a `linkfile` into the logbook, which is what this nearly was,
        and the contrast is the reason the logbook below carries none. A symlink is invisible
        to every check here. `repo status` cannot see drift in it and nothing gates it, so one
        project's permission settings would have become every project's with no diff and no
@@ -218,7 +230,7 @@
        right answer here and the wrong one for a CLAUDE.md. The root belongs to repo and to
        none of the fifty-four checkouts under it, so a document placed there is read by
        everything above a checkout while being no project's to answer for. -->
-  <project name=".claude" path=".claude" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="dot-claude" path=".claude" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main" />
 
