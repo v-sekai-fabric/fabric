@@ -53,8 +53,7 @@
        ordinary project finds it by looking for `.repo`, which is what every other one does.
 
        The recomposition rule needs no change for any of this. `path` drops a leading digit
-       and joins with the child, so `7-service/see-through` rebuilds `service-see-through`
-       exactly as `1-transport/runpod` rebuilds `transport-runpod`.
+       and joins with the child, so `1-transport/xr-grid` rebuilds `transport-xr-grid`.
 
        This repository is not among them. `repo init` already clones it to
        `.repo/manifests` and reads the manifest from there, so a `path="."`
@@ -73,10 +72,7 @@
        in check_docs.py lists the five, each with its reason. -->
 
   <remote name="v-sekai-multiplayer-fabric" fetch="https://github.com/v-sekai-multiplayer-fabric" />
-  <remote name="v-sekai" fetch="https://github.com/V-Sekai" />
   <remote name="fire" fetch="https://github.com/fire" />
-  <remote name="taskweft" fetch="https://github.com/taskweft" />
-  <remote name="meshula" fetch="https://github.com/meshula" />
   <!-- Upstreams of libraries a project links. Nothing here is ours, and the entries below
        pin each one by commit rather than by branch: a library a build links is a value this
        manifest depends on, and the rule about stating them does not stop at our own code. -->
@@ -88,9 +84,7 @@
   <default sync-j="16" />
 
   <!-- 1: the transport layers. Each terminates a client protocol and triggers an
-       interactor. The two MCP servers are transport layers for an authoring client
-       rather than a player one, which changes the protocol and nothing else. -->
-  <project name="transport-asset" path="1-transport/asset" remote="v-sekai-multiplayer-fabric" revision="main" />
+       interactor. -->
   <project name="transport-fanout" path="1-transport/fanout" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- Two implementations of one contract, and the language is what tells them apart. RFD 0123
        takes the unqualified names away from the C pair for that reason: a name that says which
@@ -98,47 +92,17 @@
        traffic; the Python pair carries none and exists to disagree with it. -->
   <project name="transport-gateway-c" path="1-transport/gateway-c" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-ingest-c" path="1-transport/ingest-c" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-gateway-python" path="1-transport/gateway-python" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-ingest-python" path="1-transport/ingest-python" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-client" path="1-transport/client" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-godot-mcp" path="1-transport/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-blender-mcp" path="1-transport/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- The meshing pen's front end, and the reason it is on our remote rather than V-Sekai's.
        `simple_sketch.gd` builds an ArrayMesh from a stroke; `xr_pinch.gd`, `world_grab.gd`
        and the OpenXR action map are how a hand drives it. A mission whose whole content is
        "anyone can build anything in world" cannot have its input surface on a remote this
        project may only read, so it is forked and `Lib.mirrors/0` records the parent. -->
   <project name="transport-xr-grid" path="1-transport/xr-grid" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <!-- The odd one: a RunPod Serverless worker is a client of its own endpoint, so this
-       terminates a queue rather than a socket. It carries no player traffic. -->
-  <project name="transport-runpod" path="1-transport/runpod" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <!-- The same bus, reached from a terminal instead of a queue, so the interactor pair can be
-       driven with no container, no registry and no cold start. -->
-  <project name="transport-bus-cli" path="1-transport/bus-cli" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 2: the contracts. Each is a model that both sides compose against, so the Lean
        workspaces that state a wire format, a lifecycle or a rule sit here rather than
        in a directory named after the language they happen to be written in. -->
-  <!-- The bus every other contract is carried over, and the one this workspace was using
-       without listing. `weft::harness` is a command in and reply bytes out over iceoryx2
-       shared memory, and it is what `transport-runpod`, `transport-bus-cli` and RFD 0125
-       compose against, so it is a contract in exactly the sense this side names.
-
-       It was already here, three times, as a `git subtree` under `thirdparty/harness` in
-       `interactor-ward` and both `see-through` halves. A subtree states its pin once in a
-       squash commit message and copies the tree into a history that did not write it, which
-       is the argument the geogram entries above already make. Listing it is the other half:
-       vendored copies stay where their builds expect them, and the repository they come
-       from becomes something a person can check out, review and gate.
-
-       Not gating it is what this entry is really for. An unlisted repository is the one
-       state no check here can see, and this one proves the point rather than illustrating
-       it: it carried no LICENSE at all, so GitHub read it as unlicensed, and Check.Authority
-       calls that worse than any restricted licence because default copyright reserves every
-       right. It also had no CITATION.cff and a 285-line README. All three are fixed in
-       contract-bus PRs 7 and 8, which MUST merge before this entry does, or this manifest
-       turns three passing gates red on the day it lands. -->
-  <project name="contract-bus" path="2-contract/bus" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-wt" path="2-contract/wt" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-entity-packet" path="2-contract/entity-packet" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-connection-fsm" path="2-contract/connection-fsm" remote="v-sekai-multiplayer-fabric" revision="main" />
@@ -156,10 +120,6 @@
   <project name="multiplayer-fabric-manuals" path="2-contract/manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 3: the interactors. Each performs actions on entities. -->
-  <project name="interactor-physics" path="3-interactor/physics" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="interactor-ward" path="3-interactor/ward" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="interactor-spatial-oracle" path="3-interactor/spatial-oracle" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="interactor-taskweft" path="3-interactor/taskweft" remote="taskweft" revision="main" />
   <project name="interactor-triangulation" path="3-interactor/triangulation" remote="fire" revision="legacy" />
   <!-- The libraries interactor-triangulation links, as projects rather than as submodules or
        subtrees. All three were submodules and all three were empty in every checkout here, so
@@ -185,28 +145,12 @@
        v1.10.0 are the same commit and both carry it. -->
   <project name="geogram" path="3-interactor/triangulation/libs/geogram" remote="brunolevy" revision="c8529bb00838186938ab31d96008a59b6a892dee" sync-s="true" />
   <project name="pmp-library" path="3-interactor/triangulation/libs/pmp-library" remote="pmp-library" revision="f2fb04f4a4188a5c1ab137e83b96e62fa99c639f" sync-s="true" />
-  <!-- Two implementations of one interactor, and the language is what tells them apart, the
-       same way RFD 0123 splits the gateway pair. Neither takes the unqualified name: a name
-       that says which of two it is beats one that implies the other is a variant. They are
-       held to the same gate by a check in the Python half that reads the C++ half's header. -->
-  <project name="interactor-see-through-cpp" path="3-interactor/see-through-cpp" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="interactor-see-through-python" path="3-interactor/see-through-python" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- 4: the entities, and the actions on them. The engine images build the runtime the
        entities are simulated in, so they sit beside them. The engine itself and the
        assembly that packs it were here and are not any more; nothing on this side builds
        Godot from source today. -->
   <project name="entities-gyre" path="4-entities/gyre" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-combat" path="4-entities/lean-combat" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-loot" path="4-entities/lean-loot" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-progression" path="4-entities/lean-progression" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-rebac" path="4-entities/lean-rebac" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-lean-shared" path="4-entities/lean-shared" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-humanoid-rom" path="4-entities/humanoid-rom" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="entities-images" path="4-entities/images" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-parsec" path="4-entities/parsec" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-model-explorer" path="4-entities/model-explorer" remote="v-sekai" revision="main" />
-  <!-- Nick Porcino's reference skeleton. We have no admin on it, so we cannot rename it. -->
-  <project name="LabRCSF" path="4-entities/LabRCSF" remote="meshula" revision="dev" />
 
   <!-- 5: the repositories. Each is an interface that gets, creates and changes entities.
        This side was empty until 2026-08-18, and it was not: `entity-store` had existed as an
@@ -254,12 +198,5 @@
   <!-- 6: the data sources. Each implements a repository: durable state, a file format,
        or a reader that gets facts out of something that was not built to be queried. -->
   <project name="datasource-queen" path="6-datasource/queen" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="datasource-flow" path="6-datasource/flow" remote="v-sekai-multiplayer-fabric" revision="main-fabric" />
-  <project name="datasource-flow-project" path="6-datasource/flow-project" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="datasource-foundationdb" path="6-datasource/foundationdb" remote="v-sekai-multiplayer-fabric" revision="portability-consensus" />
-  <project name="datasource-duckdb" path="6-datasource/duckdb" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="datasource-flowref" path="6-datasource/flowref" remote="fire" revision="main" />
-  <project name="datasource-flowref-decompiler" path="6-datasource/flowref-decompiler" remote="fire" revision="main" />
-  <!-- Upstream's own name, mirrored: the Immersive Data Center Management flow tooling. -->
-  <project name="idtx-flow" path="6-datasource/idtx-flow" remote="v-sekai-multiplayer-fabric" revision="main" />
 </manifest>
