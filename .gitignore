@@ -24,6 +24,9 @@
 /4-entities/
 /5-repository/
 /6-datasource/
+# 7 is not a side. A service packs sides into one deployable thing, so it sits past the ring
+# rather than on it. 0 is reserved for metadata about the fabric itself.
+/7-service/
 
 # Build and run output from work done at the workspace root rather than inside a child. Logs
 # from a long engine build or a test server land here and are worth keeping on disk while a

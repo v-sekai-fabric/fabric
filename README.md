@@ -1,6 +1,6 @@
 # fabric
 
-A [repo](https://gerrit.googlesource.com/git-repo) manifest: 50 projects across 5 GitHub orgs, plus the checks and the ledger that say whether the work is moving.
+A [repo](https://gerrit.googlesource.com/git-repo) manifest: 52 projects across 5 GitHub orgs, plus the checks and the ledger that say whether the work is moving.
 
 ```sh
 repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric && repo sync -j8

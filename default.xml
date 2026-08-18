@@ -30,6 +30,22 @@
        the drift the six words exist to stop. A directory that names no position
        collects whatever nobody classified, and it grew to eight of them.
 
+       A service is not a seventh side. RFD 0111 gives "service" to a deployment set rather
+       than to a position, so it names a packing of sides instead of one of them, which is
+       why `service-zone`'s README says a domain is a packing and holds no code, only the
+       manifest that runs its members together. It still needs a directory, because a
+       repository that is checked out needs one, so it takes `7-service/`: past the ring
+       rather than on it, and sorting after the sides it packs. Naming it `service/`
+       unnumbered is what RFD 0111 already refused, because an unnumbered directory is
+       where whatever nobody classified collects.
+
+       `0-` is not free for it. That number is reserved for metadata about the fabric
+       itself, which is a different kind of thing from either a side or a packing of them.
+
+       The recomposition rule needs no change for any of this. `path` drops a leading digit
+       and joins with the child, so `7-service/see-through` rebuilds `service-see-through`
+       exactly as `1-transport/runpod` rebuilds `transport-runpod`.
+
        This repository is not among them. `repo init` already clones it to
        `.repo/manifests` and reads the manifest from there, so a `path="."`
        entry produced a second working copy: edits at the workspace root were
@@ -76,6 +92,9 @@
   <!-- The odd one: a RunPod Serverless worker is a client of its own endpoint, so this
        terminates a queue rather than a socket. It carries no player traffic. -->
   <project name="transport-runpod" path="1-transport/runpod" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <!-- The same bus, reached from a terminal instead of a queue, so the interactor pair can be
+       driven with no container, no registry and no cold start. -->
+  <project name="transport-bus-cli" path="1-transport/bus-cli" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 2: the contracts. Each is a model that both sides compose against, so the Lean
        workspaces that state a wire format, a lifecycle or a rule sit here rather than
@@ -125,6 +144,13 @@
   <project name="LabRCSF" path="4-entities/LabRCSF" remote="meshula" revision="dev" />
 
   <!-- 5: the repositories. This dependency set holds none yet. -->
+
+  <!-- 7: the services. Each packs sides into one deployable thing and holds no code of its
+       own: the composition, the endpoint it runs on, why the membership is what it is, and
+       the release ladder. `service-zone` and `service-behaviour` belong here too and are not
+       listed yet, because both READMEs still say "edge plane", a compound RFD 0111 retired;
+       adding them turns `mix check words` red until they are rewritten. -->
+  <project name="service-see-through" path="7-service/see-through" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 6: the data sources. Each implements a repository: durable state, a file format,
        or a reader that gets facts out of something that was not built to be queried. -->
