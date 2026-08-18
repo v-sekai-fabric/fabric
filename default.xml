@@ -114,6 +114,26 @@
   <!-- 2: the contracts. Each is a model that both sides compose against, so the Lean
        workspaces that state a wire format, a lifecycle or a rule sit here rather than
        in a directory named after the language they happen to be written in. -->
+  <!-- The bus every other contract is carried over, and the one this workspace was using
+       without listing. `weft::harness` is a command in and reply bytes out over iceoryx2
+       shared memory, and it is what `transport-runpod`, `transport-bus-cli` and RFD 0125
+       compose against, so it is a contract in exactly the sense this side names.
+
+       It was already here, three times, as a `git subtree` under `thirdparty/harness` in
+       `interactor-ward` and both `see-through` halves. A subtree states its pin once in a
+       squash commit message and copies the tree into a history that did not write it, which
+       is the argument the geogram entries above already make. Listing it is the other half:
+       vendored copies stay where their builds expect them, and the repository they come
+       from becomes something a person can check out, review and gate.
+
+       Not gating it is what this entry is really for. An unlisted repository is the one
+       state no check here can see, and this one proves the point rather than illustrating
+       it: it carried no LICENSE at all, so GitHub read it as unlicensed, and Check.Authority
+       calls that worse than any restricted licence because default copyright reserves every
+       right. It also had no CITATION.cff and a 285-line README. All three are fixed in
+       contract-bus PRs 7 and 8, which MUST merge before this entry does, or this manifest
+       turns three passing gates red on the day it lands. -->
+  <project name="contract-bus" path="2-contract/bus" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-wt" path="2-contract/wt" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-entity-packet" path="2-contract/entity-packet" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-connection-fsm" path="2-contract/connection-fsm" remote="v-sekai-multiplayer-fabric" revision="main" />
