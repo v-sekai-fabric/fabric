@@ -103,7 +103,12 @@
   <project name="transport-client" path="1-transport/client" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-godot-mcp" path="1-transport/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-blender-mcp" path="1-transport/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-xr-grid" path="1-transport/xr-grid" remote="v-sekai" revision="main" />
+  <!-- The meshing pen's front end, and the reason it is on our remote rather than V-Sekai's.
+       `simple_sketch.gd` builds an ArrayMesh from a stroke; `xr_pinch.gd`, `world_grab.gd`
+       and the OpenXR action map are how a hand drives it. A mission whose whole content is
+       "anyone can build anything in world" cannot have its input surface on a remote this
+       project may only read, so it is forked and `Lib.mirrors/0` records the parent. -->
+  <project name="transport-xr-grid" path="1-transport/xr-grid" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- The odd one: a RunPod Serverless worker is a client of its own endpoint, so this
        terminates a queue rather than a socket. It carries no player traffic. -->
   <project name="transport-runpod" path="1-transport/runpod" remote="v-sekai-multiplayer-fabric" revision="main" />
@@ -140,7 +145,6 @@
   <project name="contract-http3-queue" path="2-contract/http3-queue" remote="v-sekai-multiplayer-fabric" revision="master" />
   <project name="contract-protocol" path="2-contract/protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-interest-mgmt" path="2-contract/interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="contract-patch-verify" path="2-contract/patch-verify" remote="fire" revision="main" />
   <!-- The obstruction behind interactor-triangulation's two mesh properties, proved rather
        than measured. A triangle's aspect ratio is at least its longest edge over its shortest,
        so a bound on the ratio is a lower bound on edge length, and a boundary that comes
@@ -181,16 +185,12 @@
        v1.10.0 are the same commit and both carry it. -->
   <project name="geogram" path="3-interactor/triangulation/libs/geogram" remote="brunolevy" revision="c8529bb00838186938ab31d96008a59b6a892dee" sync-s="true" />
   <project name="pmp-library" path="3-interactor/triangulation/libs/pmp-library" remote="pmp-library" revision="f2fb04f4a4188a5c1ab137e83b96e62fa99c639f" sync-s="true" />
-  <project name="interactor-sketch" path="3-interactor/sketch" remote="v-sekai" revision="main" />
   <!-- Two implementations of one interactor, and the language is what tells them apart, the
        same way RFD 0123 splits the gateway pair. Neither takes the unqualified name: a name
        that says which of two it is beats one that implies the other is a variant. They are
        held to the same gate by a check in the Python half that reads the C++ half's header. -->
   <project name="interactor-see-through-cpp" path="3-interactor/see-through-cpp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="interactor-see-through-python" path="3-interactor/see-through-python" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <!-- The academic CASSIE project's own Unity application. Its name is the paper's. -->
-  <project name="cassie" path="3-interactor/cassie" remote="v-sekai" revision="main" />
-
   <!-- 4: the entities, and the actions on them. The engine images build the runtime the
        entities are simulated in, so they sit beside them. The engine itself and the
        assembly that packs it were here and are not any more; nothing on this side builds
@@ -260,8 +260,6 @@
   <project name="datasource-duckdb" path="6-datasource/duckdb" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="datasource-flowref" path="6-datasource/flowref" remote="fire" revision="main" />
   <project name="datasource-flowref-decompiler" path="6-datasource/flowref-decompiler" remote="fire" revision="main" />
-  <!-- Upstream's own name, mirrored: the CASSIE paper's recorded sketch dataset, and -->
-  <!-- the Immersive Data Center Management flow tooling. -->
-  <project name="cassie-data" path="6-datasource/cassie-data" remote="v-sekai" revision="master" />
+  <!-- Upstream's own name, mirrored: the Immersive Data Center Management flow tooling. -->
   <project name="idtx-flow" path="6-datasource/idtx-flow" remote="v-sekai-multiplayer-fabric" revision="main" />
 </manifest>
