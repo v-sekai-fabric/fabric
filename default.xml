@@ -181,8 +181,6 @@
        which is the argument for listing a skeleton rather than waiting for it to be finished. -->
   <project name="repository-entity-store" path="5-repository/entity-store" remote="v-sekai-multiplayer-fabric" revision="main" />
 
-  <project name="service-see-through" path="7-service/see-through" remote="v-sekai-multiplayer-fabric" revision="main" />
-
   <!-- 0: the fabric's record of itself. Not a side, and not a packing of sides: every other
        project here is a subject of this one, which is why it sorts before all of them. It
        holds the conventions in CLAUDE.md, the ledger that books the hours, the gates that
