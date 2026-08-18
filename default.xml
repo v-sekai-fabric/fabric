@@ -104,6 +104,27 @@
   <project name="transport-godot-mcp" path="1-transport/godot-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-blender-mcp" path="1-transport/blender-mcp" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="transport-xr-grid" path="1-transport/xr-grid" remote="v-sekai" revision="main" />
+  <!-- An OpenXR runtime is a transport layer and not an engine. It terminates the protocol a
+       headset speaks, over USB or over a socket, and hands an application poses, input and a
+       swapchain to draw into; the application on the other side is the interactor. macOS has
+       no first-party runtime, so without one on this side nothing on the ring can be driven
+       from a headset on this desk at all.
+
+       A fork rather than an upstream pin. The two entries above under `brunolevy` and
+       `pmp-library` are libraries a build links and nothing here writes to them, so a commit
+       is the whole of what this manifest needs to say. This one we write to: it already
+       carries a CITATION.cff that upstream does not, which is the branch that makes it ours
+       to track, so it sits on our own remote and `Lib.mirrors/0` in the logbook records
+       demonixis/oxrsys as its parent.
+
+       Upstream is MPL-2.0, which is file level copyleft and which the licence policy allows;
+       its fetched dependencies are spdlog, glm, Catch2 and the OpenXR SDK, all MIT, Boost or
+       Apache-2.0. The Apple path links none of it: the built dylib names Metal, VideoToolbox
+       and CoreMedia and carries no FFmpeg symbol, because `pkg_check_modules(FFMPEG)` sits in
+       the branch that macOS does not take. The day somebody builds the Linux encoder here,
+       FFmpeg arrives from pkg-config as whatever that system installed, and its licence is a
+       property of that build rather than of this entry. -->
+  <project name="transport-oxrsys" path="1-transport/oxrsys" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- The odd one: a RunPod Serverless worker is a client of its own endpoint, so this
        terminates a queue rather than a socket. It carries no player traffic. -->
   <project name="transport-runpod" path="1-transport/runpod" remote="v-sekai-multiplayer-fabric" revision="main" />
