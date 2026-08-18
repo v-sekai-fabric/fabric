@@ -26,6 +26,14 @@ defmodule Check.Authority do
           )
       },
       %{
+        label: "every organisation we may write to exists on GitHub",
+        kind: :network,
+        run: &owners_exist/1,
+        # Asking GitHub cannot be perturbed by editing a file here, so the control replaces
+        # the answer: a name on the list that resolves to nothing must be reported.
+        break: &Map.put(&1, :owners, %{"weftspun" => nil})
+      },
+      %{
         label: "every repository we own carries a usable licence",
         kind: :local,
         run: &licences/1,
@@ -85,6 +93,42 @@ defmodule Check.Authority do
         nil
     end
   end
+
+  @doc """
+  Every name on the writable list MUST resolve to a real GitHub account.
+
+  The list decides what this project may change, and nothing checked its contents. The
+  check that reads it only ever asks whether a *project's* organisation is on it, so a name
+  with no project was an unverified string: six were added on an owner's word and a typo in
+  any of them would have sat there until the day a project arrived from that organisation,
+  and then failed as "may not write to", which is the wrong answer to the wrong question.
+
+  A resolving name is all this asserts. It does not ask whether we may write there -- that
+  is the owner's sentence and no API answers it -- only that the thing named exists, which
+  is the half a machine can check.
+
+  User or organisation, either is fine. `fire` is a user account and belongs on the list,
+  so the name ALLOWED_ORGS is loose rather than wrong; what the entries have in common is
+  being an owner whose repositories are ours, not being an organisation.
+  """
+  def owners_exist(ctx) do
+    types =
+      case ctx[:owners] do
+        nil ->
+          Lib.gh_many(Map.new(Lib.allowed_orgs(), fn o -> {o, ["users/#{o}", "--jq", ".type"]} end))
+
+        injected ->
+          Map.new(Lib.allowed_orgs(), fn o -> {o, Map.get(injected, o, "Organization")} end)
+      end
+
+    for owner <- Enum.sort(Lib.allowed_orgs()), blank?(types[owner]) do
+      "#{owner} is on the writable list, and GitHub has no such user or organisation"
+    end
+  end
+
+  defp blank?(nil), do: true
+  defp blank?(""), do: true
+  defp blank?(_), do: false
 
   # Google's third-party licence policy.
   # https://opensource.google/documentation/reference/thirdparty/licenses

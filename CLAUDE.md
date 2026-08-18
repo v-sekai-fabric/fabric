@@ -52,9 +52,19 @@ without the theorem it was written for, and a rewrite merged before it was rewri
 review could have caught it, because in both cases what was on screen was correct and what was
 missing had not been pushed yet.
 
-After a merge, check that the commits reached the target branch rather than that they were
-pushed. `git log origin/main..<branch>` should be empty. `gh pr view --json commits` says what
-the merge actually took, and it is the number to trust.
+After a merge, check that the work reached the target branch rather than that it was pushed.
+`git diff <branch-tip> origin/main` should be empty: the tree is the thing that had to
+arrive, and comparing trees answers that whatever the merge did to the commits.
+
+Do not use `git log origin/main..<branch>` for this. It asks whether the commit is an
+ancestor, which a squash merge always makes false -- GitHub writes a new commit, so the
+branch tip is unreachable from main even when every byte landed. It cried wolf on #50, #52
+and #53 in one day, each time on a merge that was complete. A check that is red on every
+correct merge is one nobody reads by the fourth time, which is the failure it was written
+to prevent.
+
+`gh pr view --json commits` still says what the merge took, and it is the number to trust
+for which commits were included.
 
 ## Citation
 
