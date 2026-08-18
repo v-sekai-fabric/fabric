@@ -146,6 +146,32 @@ defmodule Check.Lib do
   # --- asking GitHub -----------------------------------------------------------------
 
   @doc """
+  Refuse a network call when the offline half is running.
+
+  `--fast` selects the checks that a checkout can answer, and CI runs nothing else, because
+  a repository-scoped token cannot read the organisation. That made the offline half offline
+  by coincidence: every `:local` check happened not to call out, and nothing said it had to
+  keep happening. A `gh` call added to a `:local` check would have gone unnoticed here and
+  failed only on a runner.
+
+  So it is stated instead. Every call to GitHub funnels through `gh/1` and every call to a
+  remote through `cmd/3`, and both raise when the run declared itself offline. The rule is
+  now the code rather than a habit, and breaking it fails on the desk where it was written.
+  """
+  def network!(what) do
+    if Application.get_env(:fabric_checks, :network) == :forbidden do
+      raise """
+      #{what}
+
+      That is a network call, and this run is the offline half. A check that reaches the
+      network is :network and not :local -- change its kind rather than its call.
+      """
+    end
+
+    :ok
+  end
+
+  @doc """
   One `gh api` call, returning stdout or nil. The unit the pool below maps over.
 
   stderr is captured rather than inherited. Asking for the Pages URL of a repository that
@@ -153,6 +179,15 @@ defmodule Check.Lib do
   a dozen lines of noise above a result that says everything passed.
   """
   def gh(args) do
+    network!("gh api #{Enum.join(args, " ")}")
+    do_gh(args)
+  end
+
+  # The catch lives here and not on gh/1. On gh/1 it swallowed the refusal above along with
+  # everything else, so the guard compiled, read correctly, and did nothing -- which a test
+  # of the guard caught and a reading of it would not have. It exists for one case, a `gh`
+  # that is not installed, and it is kept away from anything that raises on purpose.
+  defp do_gh(args) do
     case System.cmd("gh", ["api" | args], stderr_to_stdout: true) do
       {out, 0} -> String.trim(out)
       _ -> nil
@@ -187,8 +222,23 @@ defmodule Check.Lib do
     |> Map.new()
   end
 
-  @doc "Run a shell command, returning `{output, status}`. Used where a check reads git."
+  @doc """
+  Run a shell command, returning `{output, status}`. Used where a check reads git.
+
+  `git ls-remote` is a network call wearing git's clothes, so it goes through the same
+  refusal as `gh`. Everything else here -- `check-ignore`, `find` -- reads the disk.
+  """
   def cmd(exe, args, opts \\ []) do
+    if exe == "git" and "ls-remote" in args do
+      network!("git ls-remote #{Enum.at(args, 2)}")
+    end
+
+    do_cmd(exe, args, opts)
+  end
+
+  # Same reason as do_gh/1: the catch is for a missing executable, and it must not be in a
+  # position to swallow a deliberate refusal.
+  defp do_cmd(exe, args, opts) do
     System.cmd(exe, args, Keyword.merge([stderr_to_stdout: true], opts))
   catch
     :error, _ -> {"", 127}
@@ -354,6 +404,10 @@ defmodule Check.Lib do
       mtext: File.read!(manifest_path()),
       rtext: File.read!(readme_path())
     }
+
+    # Declared before a single check runs, and global rather than per-process so the pools
+    # in gh_many/1 and revisions_exist/1 inherit it.
+    Application.put_env(:fabric_checks, :network, if(only_local?, do: :forbidden, else: :allowed))
 
     selected =
       Enum.reject(checks, fn c ->
