@@ -10,6 +10,15 @@
 # What runs here is what a bare clone can answer for itself: the checkout claims and their
 # negative controls. Two things stay local on purpose.
 #
+# This job never calls GitHub. Not `gh`, not `git ls-remote`, not an HTTP request: the only
+# thing it fetches over the network is the toolchain, which setup-beam installs.
+#
+# That is enforced rather than intended. `mix check --fast` declares the run offline, and
+# Check.Lib.gh/1 and Check.Lib.cmd/3 raise on any call that would leave the machine, so a
+# network call added to a `:local` check fails on the desk it was written on instead of on a
+# runner. Before that it was true only by coincidence -- every `:local` check happened not to
+# call out, and nothing said it had to keep happening.
+#
 # The network half stays at pre-push -- both its claims and its controls -- because `gh`
 # there is authenticated as a person who can read the organisation. A repository-scoped
 # GITHUB_TOKEN cannot list the org, so running them here would fail on every push and teach
