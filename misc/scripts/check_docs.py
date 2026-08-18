@@ -978,6 +978,55 @@ def check_licences(mtext, _rtext):
     return sorted(bad)
 
 
+# What the tree holds, replaced for the self-test. No edit to the manifest or to this
+# README can put a file into a checkout, so the control supplies the reading instead.
+DSSTORE_OVERRIDE = None
+
+
+def check_no_ds_store_where_we_may_write(mtext, _rtext):
+    """No .DS_Store in a repository this project may write to.
+
+    Finder writes one into every directory it is asked to display, so the file arrives
+    without anybody deciding it should. It records icon positions on one machine and means
+    nothing on any other, which makes it exactly the thing the rest of these checks exist to
+    remove: a fact with no owner, committed by accident and then read by nobody.
+
+    The gate is presence in the checkout rather than whether git tracks it. An untracked one
+    is a commit waiting for a careless `git add -A`, and both halves are one keystroke apart;
+    a .gitignore entry stops the second commit and never the first. Ignoring it also hides
+    it -- `git status` says nothing about a file it was told to ignore -- so tracking is the
+    one reading that cannot tell a clean repository from a quiet one.
+
+    Authority is the boundary, and it is the same one the length and listing rules stop at:
+    ALLOWED_ORGS, less the mirrors and the READ_ONLY entries. A stray file inside somebody
+    else's repository is theirs, and deleting it here writes a diff we would then carry.
+    """
+    if DSSTORE_OVERRIDE is not None:
+        return [f"{name} carries {loc}, which Finder wrote and nothing reads"
+                for name, loc in DSSTORE_OVERRIDE]
+    _, remotes, projects = parse_manifest(mtext)
+    ws = _workspace_root()
+    # This repository is the one we have most authority over, so it is checked beside the
+    # projects rather than trusted. Its name on the remote is the last word of the URL.
+    ours = [("fabric", ROOT)]
+    for p in projects:
+        org = (remotes.get(p["remote"]) or "").rsplit("/", 1)[-1]
+        if org not in ALLOWED_ORGS or p["name"] in MIRRORS or p["name"] in READ_ONLY:
+            continue
+        ours.append((p["name"], ws / p["path"]))
+
+    bad = []
+    for name, d in ours:
+        if not d.is_dir():
+            continue
+        for f in d.rglob(".DS_Store"):
+            rel = f.relative_to(d)
+            if ".git" in rel.parts:
+                continue
+            bad.append(f"{name} carries {rel}, which Finder wrote and nothing reads")
+    return sorted(bad)
+
+
 CHECKS = [
     ("every path the README names exists", check_referenced_paths, "network"),
     ("README counts match the manifest", check_counts, "local"),
@@ -998,6 +1047,7 @@ CHECKS = [
     ("a day never books more seconds than a day holds", check_a_day_holds_a_day, "local"),
     ("no README lists the filesystem", check_no_readme_lists_the_filesystem, "local"),
     ("planned and spent time never share an account", check_plan_and_spend_are_separate, "local"),
+    ("no repository we may write to carries a .DS_Store", check_no_ds_store_where_we_may_write, "local"),
 ]
 
 # Each check paired with an edit that must break it. A gate never shown to fail certifies
@@ -1066,6 +1116,10 @@ BREAKAGE = {
     # Booking a planned hour to the account the ledger spends from is the exact confusion
     # this check exists to stop, so the control makes that edit.
     "planned and spent time never share an account": ("s", {"Expenses:Delivery:Mesh"}),
+    # Reads the tree, which no edit to a document here reaches, so the control supplies the
+    # reading -- the exact one this check produced the first time it was run.
+    "no repository we may write to carries a .DS_Store": (
+        "ds", [("transport-asset", ".DS_Store")]),
 }
 
 
@@ -1095,14 +1149,16 @@ def main():
     if self_test:
         print("\nnegative controls (each check must fail on broken input):")
         global DOC_OVERRIDE, PAGES_OVERRIDE, LEDGER_OVERRIDE, SEPARATION_OVERRIDE, DAY_OVERRIDE
-        global DEFAULTS_OVERRIDE, FORKS_OVERRIDE, LISTING_OVERRIDE
+        global DEFAULTS_OVERRIDE, FORKS_OVERRIDE, LISTING_OVERRIDE, DSSTORE_OVERRIDE
         for label, fn, _kind in selected:
             spec = BREAKAGE[label]
             m2, r2 = mtext, rtext
             DOC_OVERRIDE = PAGES_OVERRIDE = LEDGER_OVERRIDE = None
             SEPARATION_OVERRIDE = DAY_OVERRIDE = DEFAULTS_OVERRIDE = FORKS_OVERRIDE = None
-            LISTING_OVERRIDE = None
-            if spec[0] == "l2":
+            LISTING_OVERRIDE = DSSTORE_OVERRIDE = None
+            if spec[0] == "ds":
+                DSSTORE_OVERRIDE = spec[1]
+            elif spec[0] == "l2":
                 LISTING_OVERRIDE = spec[1]
             elif spec[0] == "c":
                 CONVENTION_OVERRIDE = spec[1]
@@ -1149,6 +1205,7 @@ def main():
                 DEFAULTS_OVERRIDE = None
                 FORKS_OVERRIDE = None
                 LISTING_OVERRIDE = None
+                DSSTORE_OVERRIDE = None
             if broke:
                 print(f"ok    {label} fails on broken input")
             else:
