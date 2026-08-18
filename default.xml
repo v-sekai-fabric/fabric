@@ -181,21 +181,6 @@
        which is the argument for listing a skeleton rather than waiting for it to be finished. -->
   <project name="repository-entity-store" path="5-repository/entity-store" remote="v-sekai-multiplayer-fabric" revision="main" />
 
-  <!-- 7: the services. Each packs sides into one deployable thing and holds no code of its
-       own: the composition, the endpoint it runs on, why the membership is what it is, and
-       the release ladder. `service-zone` and `service-behaviour` were held out of this list
-       while their READMEs still said "edge plane", a compound RFD 0111 retired, because
-       listing them turned `mix check words` red. Both now say "transport layer", which is the
-       substitution the gate itself prescribes, so the words are no longer what decides it.
-
-       `service-zone` is held out again, for a different reason and by a decision rather than
-       by a gate. Its own README says "Not built": it states a packing whose quadlet units
-       and Fly machine definition do not exist yet, so there is nothing behind it to sync. The
-       work is on `service-see-through` and `service-behaviour`, and a listed project is one
-       every sync clones, every `repo status` walks and every gate run reads: a per-sync cost
-       paid across every desk for a repository nobody is editing. The remote keeps it and
-       nothing is lost; it takes its entry back when the work reaches it. -->
-  <project name="service-behaviour" path="7-service/behaviour" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="service-see-through" path="7-service/see-through" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 0: the fabric's record of itself. Not a side, and not a packing of sides: every other
