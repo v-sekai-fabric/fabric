@@ -78,6 +78,11 @@
   <remote name="fire" fetch="https://github.com/fire" />
   <remote name="taskweft" fetch="https://github.com/taskweft" />
   <remote name="meshula" fetch="https://github.com/meshula" />
+  <!-- Upstreams of libraries a project links. Nothing here is ours, and the entries below
+       pin each one by commit rather than by branch: a library a build links is a value this
+       manifest depends on, and the rule about stating them does not stop at our own code. -->
+  <remote name="brunolevy" fetch="https://github.com/BrunoLevy" />
+  <remote name="pmp-library" fetch="https://github.com/pmp-library" />
 
   <!-- No remote or revision here: every project states both, so a project that -->
   <!-- omits either fails at init instead of inheriting a default nobody chose. -->
@@ -127,6 +132,22 @@
   <project name="interactor-spatial-oracle" path="3-interactor/spatial-oracle" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="interactor-taskweft" path="3-interactor/taskweft" remote="taskweft" revision="main" />
   <project name="interactor-triangulation" path="3-interactor/triangulation" remote="fire" revision="legacy" />
+  <!-- The libraries interactor-triangulation links, as projects rather than as submodules or
+       subtrees. All three were submodules and all three were empty in every checkout here, so
+       nothing compiled. A gitlink states its revision where no tool reads it and no person
+       sees it in a diff, and leaves the directory empty until somebody asks git for it
+       recursively. A subtree states the pin once, in a squash commit message, and copies the
+       tree into a history that did not write it: 118 MiB for these two.
+
+       A manifest entry states the remote and the revision in the file this project already
+       reads on every sync. `revision` is a commit rather than a branch, because a library a
+       build links is exactly the value the manifest rule is about.
+
+       geogram carries submodules of its own, and vendoring one level does not reach them.
+       The first attempt compiled until `geogram/third_party/OpenNL/nl.h` was not there.
+       `sync-s` makes repo sync those as sub-projects, so the recursion belongs to repo. -->
+  <project name="geogram" path="3-interactor/triangulation/libs/geogram" remote="brunolevy" revision="c40b4653e34519fffaeb82ca640bdd9c9778e324" sync-s="true" />
+  <project name="pmp-library" path="3-interactor/triangulation/libs/pmp-library" remote="pmp-library" revision="f2fb04f4a4188a5c1ab137e83b96e62fa99c639f" sync-s="true" />
   <project name="interactor-sketch" path="3-interactor/sketch" remote="v-sekai" revision="main" />
   <!-- Two implementations of one interactor, and the language is what tells them apart, the
        same way RFD 0123 splits the gateway pair. Neither takes the unqualified name: a name
