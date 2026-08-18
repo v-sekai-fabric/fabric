@@ -39,8 +39,19 @@
        unnumbered is what RFD 0111 already refused, because an unnumbered directory is
        where whatever nobody classified collects.
 
-       `0-` is not free for it. That number is reserved for metadata about the fabric
-       itself, which is a different kind of thing from either a side or a packing of them.
+       `0-` is not free for it. That number holds metadata about the fabric itself, which is
+       a different kind of thing from either a side or a packing of them, and it now holds a
+       project rather than a reservation. `0-infrastructure/logbook` is the record kept about
+       this dependency set: the conventions, the ledger, the gates that enforce them, and the
+       dated entries. It sits before the ring because everything on the ring is its subject.
+
+       That project is what this repository stopped being. A repo manifest and the record
+       kept about the work are two jobs, and one repository was doing both: `default.xml`
+       beside a 540-line CLAUDE.md, 44 beancount books, a mix application and a USDA memory.
+       The split leaves the manifest here, where repo reads it, and moves the rest into that
+       project. It also deletes two special cases. The checks and the ledger both used to test
+       for being at `.repo/manifests` and climb two directories to find the workspace; an
+       ordinary project finds it by looking for `.repo`, which is what every other one does.
 
        The recomposition rule needs no change for any of this. `path` drops a leading digit
        and joins with the child, so `7-service/see-through` rebuilds `service-see-through`
@@ -151,6 +162,12 @@
        listed yet, because both READMEs still say "edge plane", a compound RFD 0111 retired;
        adding them turns `mix check words` red until they are rewritten. -->
   <project name="service-see-through" path="7-service/see-through" remote="v-sekai-multiplayer-fabric" revision="main" />
+
+  <!-- 0: the fabric's record of itself. Not a side, and not a packing of sides: every other
+       project here is a subject of this one, which is why it sorts before all of them. It
+       holds the conventions in CLAUDE.md, the ledger that books the hours, the gates that
+       decide whether the documents are true, and the logbook. -->
+  <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 6: the data sources. Each implements a repository: durable state, a file format,
        or a reader that gets facts out of something that was not built to be queried. -->
