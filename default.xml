@@ -192,7 +192,7 @@
        by a gate. Its own README says "Not built": it states a packing whose quadlet units
        and Fly machine definition do not exist yet, so there is nothing behind it to sync. The
        work is on `service-see-through` and `service-behaviour`, and a listed project is one
-       every sync clones, every `repo status` walks and every gate run reads — a per-sync cost
+       every sync clones, every `repo status` walks and every gate run reads: a per-sync cost
        paid across every desk for a repository nobody is editing. The remote keeps it and
        nothing is lost; it takes its entry back when the work reaches it. -->
   <project name="service-behaviour" path="7-service/behaviour" remote="v-sekai-multiplayer-fabric" revision="main" />
@@ -209,7 +209,7 @@
 
        `path` is not free here the way it is everywhere else: Claude Code reads `.claude` and
        nothing else, so this one path is fixed by a tool outside this workspace. The name was
-       matched to it — a single-segment path recomposes to itself, so naming the repository
+       matched to it, because a single-segment path recomposes to itself, so naming it
        `.claude` was what kept the recomposition rule true without an exception.
 
        It is `dot-claude` now, and the rule takes an exception instead. A repository whose
@@ -218,7 +218,7 @@
        lands in a directory most shells will not show you. The path cannot move to meet the
        name, because the tool decides it, so `fixed_names` carries the pair. That list until
        now held only names belonging to other organisations, which is a fact rather than a
-       choice — this is the first entry that is ours, and `Check.Manifest.path_recomposes/1`
+       choice, and this is the first entry that is ours. `Check.Manifest.path_recomposes/1`
        says so in its own words. -->
   <!-- A repository rather than a `linkfile` into the logbook, which is what this nearly was,
        and the contrast is the reason the logbook below carries none. A symlink is invisible
