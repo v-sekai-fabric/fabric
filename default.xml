@@ -71,7 +71,7 @@
        is not ours to change it is the convention that gives way. FIXED_NAMES
        in check_docs.py lists the five, each with its reason. -->
 
-  <remote name="v-sekai-multiplayer-fabric" fetch="https://github.com/v-sekai-multiplayer-fabric" />
+  <remote name="v-sekai-fabric" fetch="https://github.com/v-sekai-fabric" />
   <remote name="fire" fetch="https://github.com/fire" />
   <!-- Upstreams of libraries a project links. Nothing here is ours, and the entries below
        pin each one by commit rather than by branch: a library a build links is a value this
@@ -86,30 +86,30 @@
 
   <!-- 1: the transport layers. Each terminates a client protocol and triggers an
        interactor. -->
-  <project name="transport-fanout" path="1-transport/fanout" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-fanout" path="1-transport/fanout" remote="v-sekai-fabric" revision="main" />
   <!-- Two implementations of one contract, and the language is what tells them apart. RFD 0123
        takes the unqualified names away from the C pair for that reason: a name that says which
        of two it is beats a name that implies the other is a variant. The C pair carries player
        traffic; the Python pair carries none and exists to disagree with it. -->
-  <project name="transport-gateway-c" path="1-transport/gateway-c" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-ingest-c" path="1-transport/ingest-c" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="transport-client" path="1-transport/client" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-gateway-c" path="1-transport/gateway-c" remote="v-sekai-fabric" revision="main" />
+  <project name="transport-ingest-c" path="1-transport/ingest-c" remote="v-sekai-fabric" revision="main" />
+  <project name="transport-client" path="1-transport/client" remote="v-sekai-fabric" revision="main" />
   <!-- The meshing pen's front end, and the reason it is on our remote rather than V-Sekai's.
        `simple_sketch.gd` builds an ArrayMesh from a stroke; `xr_pinch.gd`, `world_grab.gd`
        and the OpenXR action map are how a hand drives it. A mission whose whole content is
        "anyone can build anything in world" cannot have its input surface on a remote this
        project may only read, so it is forked and `Lib.mirrors/0` records the parent. -->
-  <project name="transport-xr-grid" path="1-transport/xr-grid" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="transport-xr-grid" path="1-transport/xr-grid" remote="v-sekai-fabric" revision="main" />
 
   <!-- 2: the contracts. Each is a model that both sides compose against, so the Lean
        workspaces that state a wire format, a lifecycle or a rule sit here rather than
        in a directory named after the language they happen to be written in. -->
-  <project name="contract-wt" path="2-contract/wt" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="contract-entity-packet" path="2-contract/entity-packet" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="contract-connection-fsm" path="2-contract/connection-fsm" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="contract-http3-queue" path="2-contract/http3-queue" remote="v-sekai-multiplayer-fabric" revision="master" />
-  <project name="contract-protocol" path="2-contract/protocol" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="contract-interest-mgmt" path="2-contract/interest-mgmt" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="contract-wt" path="2-contract/wt" remote="v-sekai-fabric" revision="main" />
+  <project name="contract-entity-packet" path="2-contract/entity-packet" remote="v-sekai-fabric" revision="main" />
+  <project name="contract-connection-fsm" path="2-contract/connection-fsm" remote="v-sekai-fabric" revision="main" />
+  <project name="contract-http3-queue" path="2-contract/http3-queue" remote="v-sekai-fabric" revision="master" />
+  <project name="contract-protocol" path="2-contract/protocol" remote="v-sekai-fabric" revision="main" />
+  <project name="contract-interest-mgmt" path="2-contract/interest-mgmt" remote="v-sekai-fabric" revision="main" />
   <!-- The obstruction behind interactor-triangulation's two mesh properties, proved rather
        than measured. A triangle's aspect ratio is at least its longest edge over its shortest,
        so a bound on the ratio is a lower bound on edge length, and a boundary that comes
@@ -124,7 +124,7 @@
        reply does not fit the envelope in one piece. The cap is 128 KiB, against 92 KiB for a
        64-point stroke at a fine target edge and more past that, so the mesh is chunked, which
        is what weft/command.hpp already says a caller needing more should do. -->
-  <project name="contract-bus" path="2-contract/bus" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="contract-bus" path="2-contract/bus" remote="v-sekai-fabric" revision="main" />
   <!-- The CBOR codec contract-bus links, as a project rather than a CMake fetch, for the
        reason the geogram and pmp-library entries above already give: a library a build links
        is a value this manifest depends on, and a FetchContent pin states it in a file no tool
@@ -143,10 +143,10 @@
 
        QCBOR carries no submodules, so this needs no `sync-s`. -->
   <project name="QCBOR" path="2-contract/bus/libs/qcbor" remote="laurencelundblade" revision="refs/tags/v1.6.1" />
-  <project name="contract-triangulation" path="2-contract/triangulation" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="contract-triangulation" path="2-contract/triangulation" remote="v-sekai-fabric" revision="main" />
   <!-- The manuals publish GitHub Pages, and a Pages URL does not redirect on rename,
        so this name is a published address rather than only a repository name. -->
-  <project name="multiplayer-fabric-manuals" path="2-contract/manuals" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="multiplayer-fabric-manuals" path="2-contract/manuals" remote="v-sekai-fabric" revision="main" />
 
   <!-- 3: the interactors. Each performs actions on entities. -->
   <project name="interactor-triangulation" path="3-interactor/triangulation" remote="fire" revision="legacy" />
@@ -179,15 +179,15 @@
        entities are simulated in, so they sit beside them. The engine itself and the
        assembly that packs it were here and are not any more; nothing on this side builds
        Godot from source today. -->
-  <project name="entities-gyre" path="4-entities/gyre" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="entities-images" path="4-entities/images" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="entities-gyre" path="4-entities/gyre" remote="v-sekai-fabric" revision="main" />
+  <project name="entities-images" path="4-entities/images" remote="v-sekai-fabric" revision="main" />
 
   <!-- 5: the repositories. Each is an interface that gets, creates and changes entities.
        This side was empty until 2026-08-18, and it was not: `entity-store` had existed as an
        untracked directory in the workspace for a day, with no git repository behind it and
        nothing backing it up. An unlisted directory is the one state this manifest cannot see,
        which is the argument for listing a skeleton rather than waiting for it to be finished. -->
-  <project name="repository-entity-store" path="5-repository/entity-store" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="repository-entity-store" path="5-repository/entity-store" remote="v-sekai-fabric" revision="main" />
 
   <!-- 0: the fabric's record of itself. Not a side, and not a packing of sides: every other
        project here is a subject of this one, which is why it sorts before all of them. It
@@ -221,12 +221,12 @@
        right answer here and the wrong one for a CLAUDE.md. The root belongs to repo and to
        none of the fifty-four checkouts under it, so a document placed there is read by
        everything above a checkout while being no project's to answer for. -->
-  <project name="dot-claude" path=".claude" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="dot-claude" path=".claude" remote="v-sekai-fabric" revision="main" />
 
-  <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-fabric" revision="main" />
 
   <!-- 6: the data sources. Each implements a repository: durable state, a file format,
        or a reader that gets facts out of something that was not built to be queried. -->
-  <project name="datasource-queen" path="6-datasource/queen" remote="v-sekai-multiplayer-fabric" revision="main" />
-  <project name="datasource-foundationdb" path="6-datasource/foundationdb" remote="v-sekai-multiplayer-fabric" revision="portability-consensus" />
+  <project name="datasource-queen" path="6-datasource/queen" remote="v-sekai-fabric" revision="main" />
+  <project name="datasource-foundationdb" path="6-datasource/foundationdb" remote="v-sekai-fabric" revision="portability-consensus" />
 </manifest>
