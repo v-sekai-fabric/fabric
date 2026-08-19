@@ -131,12 +131,15 @@
        here reads. `repo status` cannot see it, no gate compares it, and two checkouts made a
        month apart can differ with nothing to compare.
 
-       Pinned to the commit v1.6.1 tags rather than to the tag, because a tag can move and a
-       commit cannot. v2.0 is alpha; maturity is the whole reason for taking a library here
+       Pinned to the release tag v1.6.1, which names the version a reader is looking for
+       without a lookup. A tag can move where a commit cannot, so the commit each tag
+       resolved to when it was pinned is recorded in this repository's README and gated:
+       `every library tag still names the commit it was pinned at` fails if upstream
+       retags. v2.0 is alpha; maturity is the whole reason for taking a library here
        instead of writing one, so the stable release is the one that gets pinned.
 
        QCBOR carries no submodules, so this needs no `sync-s`. -->
-  <project name="QCBOR" path="2-contract/bus/libs/qcbor" remote="laurencelundblade" revision="930708bb86481e88879eb1d87fd4d664f1d69503" />
+  <project name="QCBOR" path="2-contract/bus/libs/qcbor" remote="laurencelundblade" revision="v1.6.1" />
   <project name="contract-triangulation" path="2-contract/triangulation" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- The manuals publish GitHub Pages, and a Pages URL does not redirect on rename,
        so this name is a published address rather than only a repository name. -->
@@ -152,8 +155,9 @@
        tree into a history that did not write it: 118 MiB for these two.
 
        A manifest entry states the remote and the revision in the file this project already
-       reads on every sync. `revision` is a commit rather than a branch, because a library a
-       build links is exactly the value the manifest rule is about.
+       reads on every sync. `revision` is a release tag rather than a branch, because a
+       library a build links is exactly the value the manifest rule is about, and a branch
+       moves under it.
 
        geogram carries submodules of its own, and vendoring one level does not reach them.
        The first attempt compiled until `geogram/third_party/OpenNL/nl.h` was not there.
@@ -166,8 +170,8 @@
        between platforms, and it is the reason a gate belongs somewhere other
        than one desk. Upstream removed the include in 3aa47aeb; v1.9.10 and
        v1.10.0 are the same commit and both carry it. -->
-  <project name="geogram" path="3-interactor/triangulation/libs/geogram" remote="brunolevy" revision="c8529bb00838186938ab31d96008a59b6a892dee" sync-s="true" />
-  <project name="pmp-library" path="3-interactor/triangulation/libs/pmp-library" remote="pmp-library" revision="f2fb04f4a4188a5c1ab137e83b96e62fa99c639f" sync-s="true" />
+  <project name="geogram" path="3-interactor/triangulation/libs/geogram" remote="brunolevy" revision="v1.10.0" sync-s="true" />
+  <project name="pmp-library" path="3-interactor/triangulation/libs/pmp-library" remote="pmp-library" revision="3.0.0" sync-s="true" />
   <!-- 4: the entities, and the actions on them. The engine images build the runtime the
        entities are simulated in, so they sit beside them. The engine itself and the
        assembly that packs it were here and are not any more; nothing on this side builds
