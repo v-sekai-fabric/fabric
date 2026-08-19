@@ -78,6 +78,7 @@
        manifest depends on, and the rule about stating them does not stop at our own code. -->
   <remote name="brunolevy" fetch="https://github.com/BrunoLevy" />
   <remote name="pmp-library" fetch="https://github.com/pmp-library" />
+  <remote name="laurencelundblade" fetch="https://github.com/laurencelundblade" />
 
   <!-- No remote or revision here: every project states both, so a project that -->
   <!-- omits either fails at init instead of inheriting a default nobody chose. -->
@@ -124,6 +125,18 @@
        64-point stroke at a fine target edge and more past that, so the mesh is chunked, which
        is what weft/command.hpp already says a caller needing more should do. -->
   <project name="contract-bus" path="2-contract/bus" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <!-- The CBOR codec contract-bus links, as a project rather than a CMake fetch, for the
+       reason the geogram and pmp-library entries above already give: a library a build links
+       is a value this manifest depends on, and a FetchContent pin states it in a file no tool
+       here reads. `repo status` cannot see it, no gate compares it, and two checkouts made a
+       month apart can differ with nothing to compare.
+
+       Pinned to the commit v1.6.1 tags rather than to the tag, because a tag can move and a
+       commit cannot. v2.0 is alpha; maturity is the whole reason for taking a library here
+       instead of writing one, so the stable release is the one that gets pinned.
+
+       QCBOR carries no submodules, so this needs no `sync-s`. -->
+  <project name="QCBOR" path="2-contract/bus/libs/qcbor" remote="laurencelundblade" revision="930708bb86481e88879eb1d87fd4d664f1d69503" />
   <project name="contract-triangulation" path="2-contract/triangulation" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- The manuals publish GitHub Pages, and a Pages URL does not redirect on rename,
        so this name is a published address rather than only a repository name. -->

@@ -1,6 +1,6 @@
 # fabric
 
-A [repo](https://gerrit.googlesource.com/git-repo) manifest: 24 projects across 4 GitHub orgs.
+A [repo](https://gerrit.googlesource.com/git-repo) manifest: 25 projects across 5 GitHub orgs.
 
 ```sh
 repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric && repo sync -j8
@@ -8,12 +8,13 @@ repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric && repo sync -
 
 ## The layout
 
-`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered directories are its sides; that file's opening comment names all six. This repository is not among them — `repo init` clones it to `.repo/manifests` and reads the manifest from there, so edit it in that checkout. Every project states its own `remote` and `revision`, so one that omits either fails at `repo init` rather than inheriting a default. Every project tracks its repository's default branch, and the check that keeps this sentence true asks GitHub rather than the manifest. The two that do not are the libraries `interactor-triangulation` links, pinned to a commit rather than a branch because a library a build links is exactly the value a manifest exists to state:
+`default.xml` gives each project a `path`, so the workspace is one hexagon and the numbered directories are its sides; that file's opening comment names all six. This repository is not among them — `repo init` clones it to `.repo/manifests` and reads the manifest from there, so edit it in that checkout. Every project states its own `remote` and `revision`, so one that omits either fails at `repo init` rather than inheriting a default. Every project tracks its repository's default branch, and the check that keeps this sentence true asks GitHub rather than the manifest. The three that do not are the libraries a build links, pinned to a commit rather than a branch because a library a build links is exactly the value a manifest exists to state:
 
 | project | revision |
 | --- | --- |
 | `geogram` | `c8529bb00838186938ab31d96008a59b6a892dee` |
 | `pmp-library` | `f2fb04f4a4188a5c1ab137e83b96e62fa99c639f` |
+| `QCBOR` | `930708bb86481e88879eb1d87fd4d664f1d69503` |
 
 ## What this repository is not
 
