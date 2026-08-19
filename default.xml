@@ -114,6 +114,16 @@
        so a bound on the ratio is a lower bound on edge length, and a boundary that comes
        closer to itself than that admits no triangulation meeting the bound. The C++ library
        validates its input against the number this repository derives. -->
+  <!-- The bus the pen's two halves speak across. A GDExtension in transport-xr-grid publishes
+       a stroke; interactor-triangulation answers with a mesh; neither links the other, and a
+       mesher that dies takes no editor down with it.
+
+       Cut from this manifest earlier today on the argument that the pen runs in one process,
+       and restored because that argument decided an architecture it was not entitled to. The
+       reply does not fit the envelope in one piece. The cap is 128 KiB, against 92 KiB for a
+       64-point stroke at a fine target edge and more past that, so the mesh is chunked, which
+       is what weft/command.hpp already says a caller needing more should do. -->
+  <project name="contract-bus" path="2-contract/bus" remote="v-sekai-multiplayer-fabric" revision="main" />
   <project name="contract-triangulation" path="2-contract/triangulation" remote="v-sekai-multiplayer-fabric" revision="main" />
   <!-- The manuals publish GitHub Pages, and a Pages URL does not redirect on rename,
        so this name is a published address rather than only a repository name. -->
