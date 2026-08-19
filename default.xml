@@ -215,6 +215,20 @@
        none of the fifty-four checkouts under it, so a document placed there is read by
        everything above a checkout while being no project's to answer for. -->
   <project name="dot-claude" path=".claude" remote="v-sekai-multiplayer-fabric" revision="main" />
+  <!-- The agent's plugins, checked out inside the configuration that loads them. Claude Code
+       reads `.claude/plugins/`, so the path is fixed by the tool the same way `.claude` is,
+       and `fixed_names` carries the pair for the same reason: three segments cannot rebuild a
+       one-segment name.
+
+       A separate repository because the two are different in kind. `dot-claude` is settings
+       and permissions, reviewed by everyone who works here. This is code with a memory store
+       in it, and it is private, so what an agent has recorded about the work is not published
+       with the configuration that happens to load it.
+
+       Listed rather than left outside the manifest, which is the whole argument: a directory
+       that repo does not manage is one `repo status` cannot see, no gate reads, and no sync
+       brings to the next desk. -->
+  <project name="agent-plugins" path=".claude/plugins" remote="fire" revision="main" />
 
   <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main" />
 
