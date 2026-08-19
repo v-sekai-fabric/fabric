@@ -216,6 +216,24 @@
        everything above a checkout while being no project's to answer for. -->
   <project name="dot-claude" path=".claude" remote="v-sekai-multiplayer-fabric" revision="main" />
 
+  <!-- The plugins, checked out inside the checkout above at the path Claude Code scans for
+       `plugin.json`. Two different kinds of thing were in one repository: `dot-claude` is
+       settings and permissions, reviewed by everyone who works here, and this is code with a
+       memory store in it. That store records what an agent has learned about the work, which
+       is not something the configuration's audience should get by accident, so this remote
+       is `fire` and the repository is private. Not because the code is secret.
+
+       A nested project path is legal. repo's `_CheckLocalPath` validates a path in isolation
+       (no empty parts, no `~`, and no `.`, `..`, `.git` or `.repo*` components) and has no
+       overlap rule, so this gets an ordinary managed checkout with its gitdir under
+       `.repo/projects/` like any other. `.claude/.gitignore` carries `plugins/` so the outer
+       repository does not report this one as a pile of untracked files.
+
+       `fixed_names` carries the name for the reason `dot-claude` is in it: the path rebuilds
+       to `.claude-plugins` and the repository is `agent-plugins`. Claude Code decides the
+       path, so the name is the half that gives. -->
+  <project name="agent-plugins" path=".claude/plugins" remote="fire" revision="main" />
+
   <project name="infrastructure-logbook" path="0-infrastructure/logbook" remote="v-sekai-multiplayer-fabric" revision="main" />
 
   <!-- 6: the data sources. Each implements a repository: durable state, a file format,
