@@ -1,6 +1,6 @@
 # fabric
 
-A [repo](https://gerrit.googlesource.com/git-repo) manifest: 23 projects across 4 GitHub orgs.
+A [repo](https://gerrit.googlesource.com/git-repo) manifest: 24 projects across 4 GitHub orgs.
 
 ```sh
 repo init -u https://github.com/v-sekai-multiplayer-fabric/fabric && repo sync -j8
