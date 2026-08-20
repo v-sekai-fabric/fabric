@@ -229,4 +229,11 @@
        or a reader that gets facts out of something that was not built to be queried. -->
   <project name="datasource-queen" path="6-datasource/queen" remote="v-sekai-fabric" revision="main" />
   <project name="datasource-foundationdb" path="6-datasource/foundationdb" remote="v-sekai-fabric" revision="portability-consensus" />
+
+  <!-- SQLite with a VFS whose pages live in FoundationDB, so there is no local file and a
+       handoff copies nothing: another machine opens the same database and reads pages. It
+       sits beside foundationdb rather than inside it because the store is the thing a
+       repository composes against, and the cluster is what the store is a client of.
+       `datasource-queen` vendors it under thirdparty/, so the copy there follows this. -->
+  <project name="datasource-store" path="6-datasource/store" remote="v-sekai-fabric" revision="main" />
 </manifest>
